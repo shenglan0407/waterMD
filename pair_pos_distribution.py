@@ -13,6 +13,7 @@
 import mdtraj as md
 
 import numpy as np
+from scipy.fftpack import fft
 from itertools import combinations
 import matplotlib.pyplot as plt
 
@@ -20,14 +21,14 @@ import matplotlib.pyplot as plt
 # Code
 ##############################################################################
 
-# data_path = '/Users/shenglanqiao/zauber/MD_simulations/water_box/cubic_5nm'
-data_path='/Users/shenglanqiao/Documents/Github/waterMD/data'
-traj = md.load_trr(data_path+'/nvt-pr-5nm.trr', top = data_path+'/water-sol-5nm.gro', frame = 1)
+# data_path = '/Users/shenglanqiao/zauber/MD_simulations/water_box/cubic_2nm'
+data_path='/home/shenglan/MD_simulations/water_box/cubic_2nm'
+traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 
-time_step = 1 # in ps
-# time_step=traj.timestep # in ps
+# time_step = 1 # in ps
+time_step=traj.timestep # in ps
 
 #atom.index for all Oxygen of the water molecules, get pariwise distances
 water_inds = traj.topology.select_atom_indices(selection='water')
@@ -36,7 +37,7 @@ water_dist = md.compute_distances(traj,water_pairs) # unit in nm
 
 #examine statisitics for every frame
 mean_dist = np.mean(water_dist,axis=1)
-sd_dist = np.std(water_dist,axis=1)
+#sd_dist = np.std(water_dist,axis=1)
 traj_time = np.array(range(len(mean_dist)))*time_step
 
 #visualize
@@ -69,18 +70,45 @@ traj_time = np.array(range(len(mean_dist)))*time_step
 # fig3.savefig('/Users/shenglanqiao/Documents/Github/waterMD/output/pairwise_mean_dist.png')
 # plt.close(fig3)
 
-test_frame = water_dist[0]
-n_bin = 20
-bin_edges=np.linspace(np.min(test_frame),np.max(test_frame),n_bin+1)
+n_bin = 2000
+
 pressure = 10**5.0 # Pa
 temp = 300 # K
 k_b= 1.3806e-23 # SI unit
 rho_id = pressure/(k_b*temp)*1e-27 # number of atomers per nm^3
-n_ideal = 4.* np.pi*rho_id/3*(bin_edges[1:]**3.0-bin_edges[:-1]**3.0)
-print len(n_ideal)
-n_hist, _ = np.histogram(test_frame, bins = bin_edges,density=True)
-n_pairs = len(test_frame)
-plt.plot(bin_edges[:-1],n_hist/n_ideal)
-plt.show()
 
-print min(test_frame)
+
+
+g2s = []
+bin_edges = []
+for this_frame in water_dist:
+    this_bin_edges=np.linspace(np.min(this_frame),np.max(this_frame),n_bin+1)
+    bin_edges.append(this_bin_edges[:-1])
+    
+    n_ideal = 4.* np.pi*rho_id/3*(this_bin_edges[1:]**3.0-this_bin_edges[:-1]**3.0)
+    
+    n_hist, _ = np.histogram(this_frame, bins = this_bin_edges,density=True)
+    n_pairs = len(this_frame)
+    this_g2 = n_hist/n_ideal
+    g2s.append(this_g2)
+
+g2s = np.array(g2s)
+bin_edges = np.array(bin_edges)
+mean_bin_edges = np.mean(bin_edges,axis=0)
+ave_g2 = np.mean(g2s,axis=0)
+
+# fig4 = plt.figure()
+# plt.plot(np.mean(bin_edges,axis=0),np.mean(g2s,axis=0))
+# plt.xlabel('pairwise distances (nm)')
+# plt.ylabel('normalized g(r)')
+# plt.title('pair distribution function for simulated water')
+# plt.axvline(x = 1.0,ymin= 0,ymax = 1000,linestyle='--')
+# fig4.savefig('/home/shenglan/GitHub/waterMD/output/norm_g_cubic_2nm.png')
+# plt.close(fig4)
+
+cut_off=np.where(mean_bin_edges >=1.0)[0][0]
+intensity = np.absolute(fft(ave_g2[:cut_off]))**2.0
+fig5 = plt.figure()
+plt.plot(intensity)
+fig5.savefig('/home/shenglan/GitHub/waterMD/output/intensity_cubic_2nm.png')
+plt.close(fig5)
