@@ -153,4 +153,13 @@ traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
-In_QRt = test.scat_func(0.0,0.5,1)
+R = 0.5
+Qs = 2.*np.pi/np.linspace(0.1,R,10)
+Sn_QR=[]
+for Q in Qs:
+    Sn_QR.append(test.struct_factor(Q,R,1)[0])
+
+print Qs
+print Sn_QR
+plt.plot(Qs,Sn_QR,'o')
+plt.show()
