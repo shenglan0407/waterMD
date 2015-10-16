@@ -45,6 +45,7 @@ class WaterStats:
 
     def single_frame_N_QR(self,Q,R,pair_dist,time_dependent = False):
         """
+        See equations (1a) and (8) in ref [2]
         """
         if Q == 0:
             # np.sin(Q*this_pair)/(Q*this_pair) = 1.0 in the limit of Q -> 0
@@ -79,7 +80,7 @@ class WaterStats:
         frame_steps= [step+random.randint(-int(step/2),int(step/2)) \
         for ii in range(int(self.total_time/dt))]
         
-        while sum(frame_steps)>self.n_frames:
+        while sum(frame_steps)>self.n_frames-1:
             frame_steps = frame_steps[:-1]
             
         print ('the average time between each configuration is %f ps' % (np.mean(frame_steps)*self.time_step))
@@ -106,8 +107,42 @@ class WaterStats:
             
     
 
-    def scat_func(self,Q,R,t,dt):
+    def scat_func(self,Q,R,t):
+        """
+        Very approximate
+        """
         water_pairs = np.array(list(product(sorted(self.water_inds),repeat = 2)))
+        
+        frame_step = int(self.time_step/t)
+        xyz_pos=self.traj.xyz
+        
+        N_QRt = []
+        
+        # I using all frames here in the trajectory. 
+        # Caution: they may not be statistically independent
+        for ii in range(self.n_frames):
+            water_dist = []
+            for this_pair in water_pairs:
+                if (ii+frame_step)<self.n_frames:
+                    water_dist.append(np.sqrt(np.sum((xyz_pos[ii,this_pair[0],:]- \
+                                        xyz_pos[ii+frame_step,this_pair[1],:])**2.0)))
+                else:
+                    print "Frame number %d and beyond not include in I_n(Q,R,t) calculations." % (ii+1)
+                    break
+             
+            N_QRt.append(self.single_frame_N_QR(Q,R,water_dist,time_dependent = True))
+                
+        
+        if Q == 0:
+            # equation (7) in ref [2]
+            In_QRt = np.mean(N_QRt)-4./3.*np.pi*self.rho*R**3.0
+            
+        else:
+            # equations (28a-b) in ref [1]
+            In_QRt = np.mean(N_QRt)-4./3.*np.pi*self.rho*3./Q**3.*(np.sin(Q*R)-Q*R*np.cos(Q*R))
+        
+        return In_QRt      
+        
         
 ##############################################################################
 # test
@@ -118,4 +153,4 @@ traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
-Sn_QR = test.struct_factor(0.0,0.5,2)
+In_QRt = test.scat_func(0.0,0.5,1)
