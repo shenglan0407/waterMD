@@ -44,15 +44,30 @@ class WaterStats:
         
 
     def single_frame_N_QR(self,Q,R,pair_dist,time_dependent = False):
-        """See equations (1a) and (8) in ref [2]
         """
-        if time_dependent:
-            return 1.0/self.n_waters*sum([np.sin(Q*this_pair)/(Q*this_pair) \
-            for this_pair in pair_dist if this_pair <= R])
+        """
+        if Q == 0:
+            # np.sin(Q*this_pair)/(Q*this_pair) = 1.0 in the limit of Q -> 0
+            if time_dependent:
+                return 1.0/self.n_waters*sum([ 1.0 \
+                for this_pair in pair_dist if this_pair <= R])
+            else:
+                # I disgree with equation (1a) and think there must be a typo
+                return 2.0/self.n_waters*sum([1.0 \
+                for this_pair in pair_dist if this_pair <= R]) \
+                + 1
+                # + self.n_waters -> this is what equation (1a) in ref [2] thinks
         else:
-            return 2.0/self.n_waters*sum([np.sin(Q*this_pair)/(Q*this_pair) \
-            for this_pair in pair_dist if this_pair <= R]) \
-            +self.n_waters
+            # See equations (1a) and (8) in ref [2]
+            if time_dependent:
+                return 1.0/self.n_waters*sum([np.sin(Q*this_pair)/(Q*this_pair) \
+                for this_pair in pair_dist if this_pair <= R])
+            else:
+                # I disgree with equation (1a) and think there must be a typo
+                return 2.0/self.n_waters*sum([np.sin(Q*this_pair)/(Q*this_pair) \
+                for this_pair in pair_dist if this_pair <= R]) \
+                + 1
+                # + self.n_waters -> this is what equation (1a) in ref [2] thinks
     
 
     def struct_factor(self,Q,R,dt):
@@ -74,14 +89,18 @@ class WaterStats:
         for this_step in frame_steps:
             current_frame += this_step
             water_dist = md.compute_distances(self.traj[current_frame],water_pairs)[0] # unit in nm
-            print water_dist
             N_QR.append(self.single_frame_N_QR(Q,R,water_dist))
         
         # equation (4) in ref [2]
         err_Sn_QR = np.std(N_QR)/len(N_QR)
         
-        # equations (4a-d) in ref [1]
-        Sn_QR = np.mean(N_QR)-4./3.*np.pi*self.rho*3./Q**3.*(np.sin(Q*R)-Q*R*np.cos(Q*R))
+        if Q == 0:
+            # equation (7) in ref [2]
+            Sn_QR = np.mean(N_QR)-4./3.*np.pi*self.rho*R**3.0
+            
+        else:
+            # equations (4a-d) in ref [1]
+            Sn_QR = np.mean(N_QR)-4./3.*np.pi*self.rho*3./Q**3.*(np.sin(Q*R)-Q*R*np.cos(Q*R))
         
         return Sn_QR, err_Sn_QR
             
@@ -99,4 +118,4 @@ traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
-Sn_QR = test.struct_factor(2*np.pi/0.5,0.5,2)
+Sn_QR = test.struct_factor(0.0,0.5,2)
