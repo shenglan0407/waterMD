@@ -141,7 +141,11 @@ class WaterStats:
             # equations (28a-b) in ref [1]
             In_QRt = np.mean(N_QRt)-4./3.*np.pi*self.rho*3./Q**3.*(np.sin(Q*R)-Q*R*np.cos(Q*R))
         
-        return In_QRt      
+        return In_QRt
+        
+    def radial_dist(self):
+        return md.compute_rdf(self.traj, pairs = self.water_ind,bin_width = 0.05)
+              
         
         
 ##############################################################################
@@ -153,13 +157,53 @@ traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
-R = 0.5
-Qs = 2.*np.pi/np.linspace(0.1,R,10)
-Sn_QR=[]
-for Q in Qs:
-    Sn_QR.append(test.struct_factor(Q,R,1)[0])
 
-print Qs
-print Sn_QR
-plt.plot(Qs,Sn_QR,'o')
-plt.show()
+rs, g_R = test.radial_dist()
+fig3 = plt.figure()
+plt.plot(rs,g_R)
+plt.title('gn(r)')
+plt.xlabel('r (nm)')
+plt.ylabel('gn(r)')
+fig3.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/gn_r.png')
+plt.close(fig3)
+
+
+R = 0.5
+Rs = np.linspace(0.1,0.95,10)
+Qs = 2.*np.pi/np.linspace(0.1,R,10)
+
+
+Sn_0R = []
+for R in Rs:
+    Sn_0R.append(test.struct_factor(0,R,1)[0])
+fig1 = plt.figure()
+plt.plot(Rs, Sn_0R)
+plt.title("Sn(0,R) with dt = 1.0 ps")
+plt.xlabel("R (nm)")
+plt.ylabel("Sn(0,R)") 
+fig1.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/Sn_0R.png')
+plt.close(fig1)
+
+ts = np.linspace(1,10,10)
+In_0tR1 = []
+R1 = 0.1 # nm
+
+for tt in ts:
+    In_0tR1.append(test.scat_func(0,R1,tt))
+fig2 = plt.figure()
+plt.plot(ts, In_0TR1)
+plt.title("In(0,t,R)")
+plt.xlabel("t (pd)")
+plt.ylabel("In(0,t,R)") 
+fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
+plt.close(fig2)
+
+
+# Sn_QR=[]
+# for Q in Qs:
+#     Sn_QR.append(test.struct_factor(Q,R,1)[0])
+# 
+# print Qs
+# print Sn_QR
+# plt.plot(Qs,Sn_QR,'o')
+# plt.show()
