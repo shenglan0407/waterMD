@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 # Code
 ##############################################################################
 
-# data_path = '/Users/shenglanqiao/zauber/MD_simulations/water_box/cubic_2nm'
-data_path='/home/shenglan/MD_simulations/water_box/cubic_2nm'
+data_path = '/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+# data_path='/home/shenglan/MD_simulations/water_box/cubic_2nm'
 traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
@@ -70,45 +70,55 @@ traj_time = np.array(range(len(mean_dist)))*time_step
 # fig3.savefig('/Users/shenglanqiao/Documents/Github/waterMD/output/pairwise_mean_dist.png')
 # plt.close(fig3)
 
-n_bin = 2000
+n_bin = 100
 
-pressure = 10**5.0 # Pa
-temp = 300 # K
-k_b= 1.3806e-23 # SI unit
-rho_id = pressure/(k_b*temp)*1e-27 # number of atomers per nm^3
+# pressure = 10**5.0 # Pa
+# temp = 300 # K
+# k_b= 1.3806e-23 # SI unit
+# rho_id = pressure/(k_b*temp)*1e-27 # number of atomers per nm^3
+
+# print len(water_dist[0])
+# print traj.n_residues
+# print traj.unitcell_volumes
+# rho_id = traj.n_residues/np.mean(traj.unitcell_volumes)
+rho_id = 1.0
 
 
+# look at 0 to 1.0 nm
 
 g2s = []
-bin_edges = []
+bin_edges = np.linspace(0.0,1.0,n_bin)
 for this_frame in water_dist:
-    this_bin_edges=np.linspace(np.min(this_frame),np.max(this_frame),n_bin+1)
-    bin_edges.append(this_bin_edges[:-1])
     
-    n_ideal = 4.* np.pi*rho_id/3*(this_bin_edges[1:]**3.0-this_bin_edges[:-1]**3.0)
+    n_ideal = 4.* np.pi*rho_id/3.*(bin_edges[1:]**3.0-bin_edges[:-1]**3.0)
     
-    n_hist, _ = np.histogram(this_frame, bins = this_bin_edges,density=True)
-    n_pairs = len(this_frame)
+    n_hist, _ = np.histogram(this_frame, bins = bin_edges,density=True)
     this_g2 = n_hist/n_ideal
     g2s.append(this_g2)
 
 g2s = np.array(g2s)
-bin_edges = np.array(bin_edges)
-mean_bin_edges = np.mean(bin_edges,axis=0)
+bin_edges = 0.5*(bin_edges[1:]+bin_edges[:-1])
 ave_g2 = np.mean(g2s,axis=0)
+g2_err = np.std(g2s,axis=0)/(ave_g2[-1])
+ave_g2 = ave_g2/(ave_g2[-1])
 
-# fig4 = plt.figure()
-# plt.plot(np.mean(bin_edges,axis=0),np.mean(g2s,axis=0))
-# plt.xlabel('pairwise distances (nm)')
-# plt.ylabel('normalized g(r)')
-# plt.title('pair distribution function for simulated water')
-# plt.axvline(x = 1.0,ymin= 0,ymax = 1000,linestyle='--')
-# fig4.savefig('/home/shenglan/GitHub/waterMD/output/norm_g_cubic_2nm.png')
-# plt.close(fig4)
+r,grs = md.compute_rdf(traj, pairs = water_pairs,bin_width = 0.01)
 
-cut_off=np.where(mean_bin_edges >=1.0)[0][0]
-intensity = np.absolute(fft(ave_g2[:cut_off]))**2.0
-fig5 = plt.figure()
-plt.plot(intensity)
-fig5.savefig('/home/shenglan/GitHub/waterMD/output/intensity_cubic_2nm.png')
-plt.close(fig5)
+fig4 = plt.figure()
+plt.plot(r,grs,color='Green')
+plt.errorbar(bin_edges,ave_g2,yerr=g2_err)
+plt.xlabel('pairwise distances (nm)')
+plt.ylabel('normalized g(r)')
+plt.xlim(0,1.0)
+plt.ylim(0,3.0)
+plt.title('pair distribution function for simulated water')
+#plt.axvline(x = 1.0,ymin= 0,ymax = 1000,linestyle='--')
+fig4.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/norm_g_cubic_2nm.png')
+plt.close(fig4)
+
+# cut_off=np.where(mean_bin_edges >=1.0)[0][0]
+# intensity = np.absolute(fft(ave_g2[:cut_off]))**2.0
+# fig5 = plt.figure()
+# plt.plot(intensity)
+# fig5.savefig('/home/shenglan/GitHub/waterMD/output/intensity_cubic_2nm.png')
+# plt.close(fig5)
