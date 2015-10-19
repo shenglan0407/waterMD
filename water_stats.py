@@ -143,10 +143,26 @@ class WaterStats:
         
         return In_QRt
         
-    def radial_dist(self):
-        return md.compute_rdf(self.traj, pairs = self.water_ind,bin_width = 0.05)
-              
+    def radial_dist(self, r_range, n_bins = 200):
+        water_pairs = np.array(list(combinations(sorted(self.water_inds),2)))
+        water_dist = md.compute_distances(self.traj,water_pairs) # unit in nm
         
+        g2s = []
+        bin_edges = np.linspace(r_range[0],r_range[1],n_bins)
+        for this_frame in water_dist:
+            n_ideal = 4.* np.pi/3.*(bin_edges[1:]**3.0-bin_edges[:-1]**3.0)
+            n_hist, _ = np.histogram(this_frame, bins = bin_edges,density=True)
+            this_g2 = n_hist/n_ideal
+            g2s.append(this_g2)
+
+        g2s = np.array(g2s)
+        bin_edges = 0.5*(bin_edges[1:]+bin_edges[:-1])
+        ave_g2 = np.mean(g2s,axis=0)
+        g2_err = np.std(g2s,axis=0)/(ave_g2[-1]) # normalize assuming g2(r) converges to 1.0.
+        ave_g2 = ave_g2/(ave_g2[-1])
+        
+        self.rdf = [bin_edges,ave_g2,g2_err]
+    
         
 ##############################################################################
 # test
@@ -157,20 +173,22 @@ traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
+# 
+# test.radial_dist([0.0,1.0])
+# rs, g_R, g_err = test.rdf[0],test.rdf[1],test.rdf[2]
+# fig3 = plt.figure()
+# plt.errorbar(rs,g_R, yerr=g_err)
+# plt.title('gn(r)')
+# plt.xlabel('r (nm)')
+# plt.ylabel('gn(r)')
+# plt.ylim(0,max(g_R)*1.2)
+# fig3.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/gn_r.png')
+# plt.close(fig3)
 
-rs, g_R = test.radial_dist()
-fig3 = plt.figure()
-plt.plot(rs,g_R)
-plt.title('gn(r)')
-plt.xlabel('r (nm)')
-plt.ylabel('gn(r)')
-fig3.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/gn_r.png')
-plt.close(fig3)
 
-
-R = 0.5
-Rs = np.linspace(0.1,0.95,10)
-Qs = 2.*np.pi/np.linspace(0.1,R,10)
+# R = 0.5
+Rs = np.linspace(0.2,0.4,10)
+# Qs = 2.*np.pi/np.linspace(0.1,R,10)
 
 
 Sn_0R = []
@@ -184,19 +202,19 @@ plt.ylabel("Sn(0,R)")
 fig1.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/Sn_0R.png')
 plt.close(fig1)
 
-ts = np.linspace(1,10,10)
-In_0tR1 = []
-R1 = 0.1 # nm
-
-for tt in ts:
-    In_0tR1.append(test.scat_func(0,R1,tt))
-fig2 = plt.figure()
-plt.plot(ts, In_0TR1)
-plt.title("In(0,t,R)")
-plt.xlabel("t (pd)")
-plt.ylabel("In(0,t,R)") 
-fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
-plt.close(fig2)
+# ts = np.linspace(1,10,10)
+# In_0tR1 = []
+# R1 = 0.1 # nm
+# 
+# for tt in ts:
+#     In_0tR1.append(test.scat_func(0,R1,tt))
+# fig2 = plt.figure()
+# plt.plot(ts, In_0tR1)
+# plt.title("In(0,t,R)")
+# plt.xlabel("t (pd)")
+# plt.ylabel("In(0,t,R)") 
+# fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
+# plt.close(fig2)
 
 
 # Sn_QR=[]
