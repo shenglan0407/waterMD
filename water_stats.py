@@ -113,7 +113,7 @@ class WaterStats:
         """
         water_pairs = np.array(list(product(sorted(self.water_inds),repeat = 2)))
         
-        frame_step = int(self.time_step/t)
+        frame_step = int(t/self.time_step)
         xyz_pos=self.traj.xyz
         
         N_QRt = []
@@ -121,16 +121,16 @@ class WaterStats:
         # I using all frames here in the trajectory. 
         # Caution: they may not be statistically independent
         for ii in range(self.n_frames):
-            water_dist = []
-            for this_pair in water_pairs:
-                if (ii+frame_step)<self.n_frames:
+            if (ii+frame_step)<self.n_frames:
+                water_dist = []
+                for this_pair in water_pairs:
                     water_dist.append(np.sqrt(np.sum((xyz_pos[ii,this_pair[0],:]- \
                                         xyz_pos[ii+frame_step,this_pair[1],:])**2.0)))
-                else:
-                    print "Frame number %d and beyond not include in I_n(Q,R,t) calculations." % (ii+1)
-                    break
-             
-            N_QRt.append(self.single_frame_N_QR(Q,R,water_dist,time_dependent = True))
+            
+                N_QRt.append(self.single_frame_N_QR(Q,R,water_dist,time_dependent = True))
+            else:
+                print "Frame number %d and beyond not include in I_n(Q,R,t) calculations." % (ii+1)
+                break
                 
         
         if Q == 0:
@@ -184,37 +184,42 @@ test = WaterStats(traj)
 # plt.ylim(0,max(g_R)*1.2)
 # fig3.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/gn_r.png')
 # plt.close(fig3)
-
-
-# R = 0.5
-Rs = np.linspace(0.2,0.4,10)
-# Qs = 2.*np.pi/np.linspace(0.1,R,10)
-
-
-Sn_0R = []
-for R in Rs:
-    Sn_0R.append(test.struct_factor(0,R,1)[0])
-fig1 = plt.figure()
-plt.plot(Rs, Sn_0R)
-plt.title("Sn(0,R) with dt = 1.0 ps")
-plt.xlabel("R (nm)")
-plt.ylabel("Sn(0,R)") 
-fig1.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/Sn_0R.png')
-plt.close(fig1)
-
-# ts = np.linspace(1,10,10)
-# In_0tR1 = []
-# R1 = 0.1 # nm
 # 
-# for tt in ts:
-#     In_0tR1.append(test.scat_func(0,R1,tt))
-# fig2 = plt.figure()
-# plt.plot(ts, In_0tR1)
-# plt.title("In(0,t,R)")
-# plt.xlabel("t (pd)")
-# plt.ylabel("In(0,t,R)") 
-# fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
-# plt.close(fig2)
+# Rs = np.linspace(0.2,0.4,10)
+# 
+# Sn_0R = []
+# for R in Rs:
+#     Sn_0R.append(test.struct_factor(0,R,1)[0])
+# fig1 = plt.figure()
+# plt.plot(Rs, Sn_0R)
+# plt.title("Sn(0,R) with dt = 1.0 ps")
+# plt.xlabel("R (nm)")
+# plt.ylabel("Sn(0,R)") 
+# fig1.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/Sn_0R.png')
+# plt.close(fig1)
+
+# Qs = 2.*np.pi/np.linspace(0.1,R,10)
+ts = np.linspace(1,10,10)
+print ts
+
+In_0tR1 = []
+In_0tR2 = []
+R1 = 0.3 # nm
+R2 = 0.5 # nm
+
+for tt in ts:
+    In_0tR1.append(test.scat_func(0,R1,tt))
+    In_0tR2.append(test.scat_func(0,R2,tt))
+    
+fig2 = plt.figure()
+plt.plot(ts, In_0tR1,label = "R = %.2f" % R1)
+plt.plot(ts, In_0tR2,label = "R = %.2f" % R2)
+plt.legend()
+plt.title("In(0,t,R)")
+plt.xlabel("t (ps)")
+plt.ylabel("In(0,t,R)") 
+fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
+plt.close(fig2)
 
 
 # Sn_QR=[]
