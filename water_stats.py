@@ -83,7 +83,7 @@ class WaterStats:
         while sum(frame_steps)>self.n_frames-1:
             frame_steps = frame_steps[:-1]
             
-        print ('the average time between each configuration is %f ps' % (np.mean(frame_steps)*self.time_step))
+        # print ('the average time between each configuration is %f ps' % (np.mean(frame_steps)*self.time_step))
         
         N_QR = []
         current_frame = 0
@@ -163,6 +163,27 @@ class WaterStats:
         
         self.rdf = [bin_edges,ave_g2,g2_err]
     
+    def estimate_struct_factor(self,Qs,R_inf,dt_ind):
+        S_Q = []
+        S_Qerr = []
+        
+        for this_Q in Qs:
+            this_Sn_Q = self.struct_factor(this_Q,R_inf,dt_ind)
+            this_Sn_0 = self.struct_factor(0,R_inf,dt_ind)
+            if this_Q == 0:
+                S_Q.append(this_Sn_Q[0])
+                S_Qerr.append(this_Sn_Q[1])
+            else:    
+                this_S = this_Sn_Q[0] \
+                + this_Sn_0[0]/(1-1/self.n_waters*4./3.*np.pi*self.rho*R_inf**3.0) \
+                * 1./self.n_waters*4./3.*np.pi*self.rho \
+                *3./this_Q**3.*(np.sin(this_Q*R_inf)-this_Q*R_inf*np.cos(this_Q*R_inf))
+                S_Q.append(this_S)
+                S_Qerr.append(np.sqrt(this_Sn_Q[1]**2.0 + this_Sn_0[1]**2.0)) # estimate of error
+        
+        self.ssf = [Qs, S_Q, S_Qerr]
+        
+    
         
 ##############################################################################
 # test
@@ -198,29 +219,45 @@ test = WaterStats(traj)
 # fig1.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/Sn_0R.png')
 # plt.close(fig1)
 
-# Qs = 2.*np.pi/np.linspace(0.1,R,10)
+R_max = 0.5
+dt = 8.0
+Qs = 2.*np.pi*np.linspace(0.0,40,100)
+test.estimate_struct_factor(Qs,R_max,dt)
+
+fig = plt.figure()
+
+# Sn_QR = []
+# for Q in Qs:
+#     Sn_QR.append(test.struct_factor(Q,R_max,dt)[0])
+Qs,S_Q,S_Qerr=test.ssf[0],test.ssf[1],test.ssf[2]
+plt.errorbar(Qs,S_Q,yerr=S_Qerr)
+# plt.plot(Qs,Sn_QR,'go')
+plt.title("Estimate of S(Q) with dt = %.1f ps and R_inf = %.1f" % (dt,R_max))
+plt.xlabel("Q (rad/nm)")
+plt.ylabel("S(Q)") 
+fig.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/S_Q.png')
+plt.close(fig)
 ts = np.linspace(1,10,10)
-print ts
-
-In_0tR1 = []
-In_0tR2 = []
-R1 = 0.3 # nm
-R2 = 0.5 # nm
-
-for tt in ts:
-    In_0tR1.append(test.scat_func(0,R1,tt))
-    In_0tR2.append(test.scat_func(0,R2,tt))
-    
-fig2 = plt.figure()
-plt.plot(ts, In_0tR1,label = "R = %.2f" % R1)
-plt.plot(ts, In_0tR2,label = "R = %.2f" % R2)
-plt.legend()
-plt.title("In(0,t,R)")
-plt.xlabel("t (ps)")
-plt.ylabel("In(0,t,R)") 
-fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
-plt.close(fig2)
-
+# 
+# In_0tR1 = []
+# In_0tR2 = []
+# R1 = 0.3 # nm
+# R2 = 0.5 # nm
+# 
+# for tt in ts:
+#     In_0tR1.append(test.scat_func(0,R1,tt))
+#     In_0tR2.append(test.scat_func(0,R2,tt))
+#     
+# fig2 = plt.figure()
+# plt.plot(ts, In_0tR1-min(In_0tR1),label = "R = %.2f" % R1)
+# plt.plot(ts, In_0tR2-min(In_0tR2),label = "R = %.2f" % R2)
+# plt.legend()
+# plt.title("In(0,t,R)")
+# plt.xlabel("t (ps)")
+# plt.ylabel("In(0,t,R)") 
+# fig2.savefig('/Users/shenglanqiao/Documents/GitHub/waterMD/output/In_0tR.png')
+# plt.close(fig2)
+# 
 
 # Sn_QR=[]
 # for Q in Qs:
