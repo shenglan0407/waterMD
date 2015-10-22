@@ -188,15 +188,37 @@ class WaterStats:
                 S_Qerr.append(np.sqrt(this_Sn_Q[1]**2.0 + this_Sn_0[1]**2.0)) # estimate of error
         
         self.ssf = [np.array(Qs), np.array(S_Q), np.array(S_Qerr)]
+
+    def make_tthd(self,vertex_ind,cut_off,frame_ind):
+        """
+        Given index of one vertex, find three other vertices within radius cut_off to form
+        a unique tetrahedron in one single frame of traj
+        returns list a array of shape (3,), indices of the three other vertices
+        """
+        nbs = md.compute_neighbors(self.traj[frame_ind],cut_off,[vertex_ind],haystack_indices = self.water_inds)[0]
+        print nbs.shape
+        tthd_inds = np.array(list(combinations(nbs,3))) # I should not need to sort nbs, consider getting rid of the sorted part for all other instances of combinations
         
-    
+        tthds = []
+        xyz_pos = self.traj[frame_ind].xyz
+        for this_tthd in tthd_inds:
+            # representing a tetrahedron with just two vectors, is this even right?
+            r_ij = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[0],:]
+            r_kl = xyz_pos[0,this_tthd[1],:]- xyz_pos[0,this_tthd[2],:] # nm
+            tthds.append((r_ij,r_kl))
+        return tthds 
+        
         
 ##############################################################################
 # test
 ##############################################################################
 # 
-# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-# traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
-# print ('here is some info about the trajectory we are looking at:')
-# print traj
-# test = WaterStats(traj)
+data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+print ('here is some info about the trajectory we are looking at:')
+print traj
+test = WaterStats(traj)
+
+tthd = test.make_tthd(120,0.5,0)
+print len(tthd)
+print tthd[815]
