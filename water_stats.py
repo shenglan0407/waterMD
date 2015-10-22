@@ -187,16 +187,16 @@ class WaterStats:
                 S_Q.append(this_S)
                 S_Qerr.append(np.sqrt(this_Sn_Q[1]**2.0 + this_Sn_0[1]**2.0)) # estimate of error
         
-        self.ssf = [Qs, S_Q, S_Qerr]
+        self.ssf = [np.array(Qs), np.array(S_Q), np.array(S_Qerr)]
         
     
         
 ##############################################################################
 # test
 ##############################################################################
-
-data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
-print ('here is some info about the trajectory we are looking at:')
-print traj
-test = WaterStats(traj)
+# 
+# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+# traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+# print ('here is some info about the trajectory we are looking at:')
+# print traj
+# test = WaterStats(traj)
