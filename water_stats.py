@@ -207,7 +207,19 @@ class WaterStats:
             r_kl = xyz_pos[0,this_tthd[1],:]- xyz_pos[0,this_tthd[2],:] # nm
             tthds.append((r_ij,r_kl))
         return tthds 
+    
+    def make_frame_inds(self,dt):
+        """
+        returns indices of frames for average a quantity over
+        """
+        step = int(dt/self.time_step)
+        frame_steps= [step+random.randint(-int(step/2),int(step/2)) \
+        for ii in range(int(self.total_time/dt))]
         
+        while sum(frame_steps)>self.n_frames:
+            frame_steps = frame_steps[:-1]
+        
+        return np.cumsum(frame_steps)
         
 ##############################################################################
 # test
@@ -219,6 +231,8 @@ print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
 
-tthd = test.make_tthd(120,0.5,0)
-print len(tthd)
-print tthd[815]
+# tthd = test.make_tthd(120,0.5,0)
+# print len(tthd)
+# print tthd[815]
+
+print test.make_frame_inds(12.0)
