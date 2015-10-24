@@ -85,7 +85,7 @@ def test_In_0tR(R1,R2,tt):
     fig.savefig(output_path+'/In_0tR.png')
     plt.close(fig)
 
-def test_estimate_sf(Qs,R_max,dt,plot_Sn_QR=True):
+def test_estimate_sf(Qs,R_max,dt,plot_Sn_QR=False):
     test.estimate_struct_factor(Qs,R_max,dt)
     
     Sn_QR = []
@@ -96,7 +96,7 @@ def test_estimate_sf(Qs,R_max,dt,plot_Sn_QR=True):
     
     
     plt.title("Estimate of S(Q) with dt = %.1f ps and R_inf = %.1f" % (dt,R_max))
-    plt.xlabel("Q*R_water (rad)")
+    plt.xlabel("Q*R_water")
     plt.ylabel("S(Q)")
     plt.xlim(0,max(Qs*R_water/(2*np.pi)))
     if plot_Sn_QR:
@@ -138,6 +138,36 @@ def test_Sn_QR(Qs,R_max,dt):
     fig.savefig(output_path+'/Sn_QR.png')
     plt.close(fig)
 
+def test_two_point_ft(Qs,R_max,dt):
+    # I want to check I get the same result for the 2-point strcture factor if I try to do the 
+    # fourier transform explicitly. So far I have observed that at least the imaginary part
+    # is effectively zero. Next I want to check that for a particular length q only the 
+    # magnitude of the vector q matters but not the direction, i.e. two q vectors with
+    # the same length should return the same answer for the summation term in Sn(Q) 
+    frames = test.make_frame_inds(20.0)
+    print frames
+    
+    unit_vec = np.array([1,1,1])/np.sqrt(3.)
+    Sn_Q1 = []
+    Sn_Q2 = []
+    for Q in Qs:
+        print "calculating for %.2f" % Q
+        this_q = Q * unit_vec
+        sf2 = [test.two_point_struct_factor(this_q,R_max,this_frame) for this_frame in frames]
+        Sn_Q2.append(np.mean(sf2))
+        
+        sf1 = [test.two_point_struct_factor(-this_q,R_max,this_frame) for this_frame in frames]
+        Sn_Q1.append(np.mean(sf2))
+        
+    Sn_Q = np.array(Sn_Q)
+    fig = plt.figure()
+    plt.plot(Qs,np.abs(Sn_Q2),label='q')
+    plt.plot(Qs,np.abs(Sn_Q1),label='-q')
+    plt.legend(loc=4)
+    plt.xlabel('Q')
+    plt.ylabel('sum of fourier terms')
+    fig.savefig(output_path+'/test_ft.png')
+    plt.close(fig)
 
 ##############################################################################
 # test
@@ -147,11 +177,12 @@ Rs = np.linspace(0.2,0.4,10)
 
 R_max = 0.5 # nm
 dt = 8.0 # ps
-Qs = 2.*np.pi*np.linspace(0.0,3/R_water,50)
+Qs = 2.*np.pi*np.linspace(0.0,1.5/R_water,10)
 
 ts = np.linspace(1,10,10)
 
-test_estimate_sf(Qs,R_max,dt)
- 
 
 
+
+
+test_two_point_ft(Qs,R_max,dt)
