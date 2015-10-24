@@ -2,4 +2,7 @@
 ._.DS_Store
 /output
 *.pyc
+*.gz
+*.aux
+*.log
 
