@@ -196,7 +196,7 @@ class WaterStats:
         returns list a array of shape (3,), indices of the three other vertices
         """
         nbs = md.compute_neighbors(self.traj[frame_ind],cut_off,[vertex_ind],haystack_indices = self.water_inds)[0]
-        print nbs.shape
+        # print nbs.shape
         tthd_inds = np.array(list(combinations(nbs,3))) # I should not need to sort nbs, consider getting rid of the sorted part for all other instances of combinations
         
         tthds = []
@@ -208,6 +208,25 @@ class WaterStats:
             tthds.append((r_ij,r_kl))
         return tthds 
     
+    def make_pairs(self,vertex_ind,cut_off,frame_ind):
+        nbs = md.compute_neighbors(self.traj[frame_ind],cut_off,[vertex_ind],haystack_indices = self.water_inds)[0]
+
+        pairs = []
+        xyz_pos = self.traj[frame_ind].xyz
+        for this_nb in nbs:
+            # representing a tetrahedron with just two vectors, is this even right?
+            r_ij = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_nb,:]
+            pairs.append(r_ij)
+        return pairs 
+        
+    def two_point_struct_factor(self,q1,*args):
+        sum = 0
+        for this_water in self.water_inds:
+            pairs = self.make_pairs(this_water,*args)
+            for pp in pairs:
+                sum += np.exp(1j*np.sum(pp*q1))
+        return sum/self.n_waters+1
+        
     def make_frame_inds(self,dt):
         """
         returns indices of frames for average a quantity over
@@ -221,18 +240,36 @@ class WaterStats:
         
         return np.cumsum(frame_steps)
         
+    def four_point_struct_factor(self,q1,q2,*args):
+        """
+        Sums all the fourier terms in one frame of simulation
+        q1: array, 3-d vector
+        q2: array, ed vector
+        """
+        sum = 0
+        for this_water in self.water_inds:
+            tthds = self.make_tthd(this_water,*args)
+            for tt in tthds:
+                sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2))
+        return sum
+                
 ##############################################################################
 # test
 ##############################################################################
 # 
-data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
-print ('here is some info about the trajectory we are looking at:')
-print traj
-test = WaterStats(traj)
+# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+# traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+# print ('here is some info about the trajectory we are looking at:')
+# print traj
+# test = WaterStats(traj)
 
 # tthd = test.make_tthd(120,0.5,0)
 # print len(tthd)
 # print tthd[815]
 
-print test.make_frame_inds(12.0)
+#print test.four_point_struct_factor(q1,q1,0.5,10)
+# frames = test.make_frame_inds(8.0)
+# 
+# for this_frame in frames
+# print test.two_point_struct_factor(q1,0.5,10)
+# print test.two_point_struct_factor(q1,0.5,20)
