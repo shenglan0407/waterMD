@@ -1,6 +1,7 @@
 \documentclass[20pt]{article}
 \usepackage{mathtools}
 \usepackage{amsmath}
+\usepackage{commath}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{fancyhdr}
@@ -9,5 +10,25 @@
 \fancyhead[LE,RO]{Notes on 4-point Scattering Factor}
 \fancyhead[RE,LO]{Autumn 2015}
 \begin{document}
-Words
+\section{Sanity check}
+The static structure factor is the Fourier transform of the radial distribution function $g_2(r)$.
+\begin{equation}
+S(\vec{q}) = 1+ \rho \int_V d\vec{r} e^{-i \vec{q} \cdot \vec{r}} g_2(r)
+\end{equation} 
+$r$ is the distance between two water molecules and $\vec{r}$ is the vector connecting them. To compute the integral directly from MD simulation of water, I have to do the following modifications: for each frame $k$ from the simulation, find all unique combination of pairs of molecules within distance $R$ and sum up their contributions to the Fourier transform. $R$ has to be chosen since the size of the simulation box is finite. Hence an estimate of $S(\vec{q})$ from on simulation frame is:
+\begin{equation}
+S(\vec{q})\approx\frac{1}{N} \Sigma_{i,j, =1}^{N}  e^{-i \vec{q} \cdot (\vec{r_i}-\vec{r_j}}  \Delta_{ij}
+\end{equation}
+where $\Delta_{ij} = 1$ if $\abs{\vec{r_i}-\vec{r_j}} \leq R$ and is 0 otherwise.
+
+Since liquid water is isotopic, intuition tells us that the pointing $(\vec{r_i}-\vec{r_j})$ shouldn't matter and only its length should. Debye's formula formalizes this and the above summation is equivalent to:
+\begin{equation}
+S(Q)\approx\frac{1}{N} \Sigma_{i,j, =1}^{N}  \frac{\sin(Qr_{ij})}{Qr_{ij}}  \Delta_{ij}
+\end{equation}
+where $r_{ij}= \vec{r_i}-\vec{r_j}$ and $Q$ is the magnitude of $\vec{q}$.
+
+I have done some checking to make sure that the explicit Fourier transform makes sense with my simulation data. So far I have checked that it produces a small imaginary part, and also seems to be only dependent on the magnitude of $\vec{q}$ but not its pointing. This is good.
+
+Averaging over many independent simulation frames gives an estimate from the simulation of $S(Q)$. There is also a finite-size effect introduced by the simulation box. See the two Salcuse papers in the notes for details. The finite-size effect is implemented in the code. 
+\section{}
 \end{document} 
