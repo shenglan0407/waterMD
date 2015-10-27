@@ -138,13 +138,13 @@ def test_Sn_QR(Qs,R_max,dt):
     fig.savefig(output_path+'/Sn_QR.png')
     plt.close(fig)
 
-def test_two_point_ft(Qs,R_max,dt):
+def test_two_point_ft(Qs,R_max,dt=20.0):
     # I want to check I get the same result for the 2-point strcture factor if I try to do the 
     # fourier transform explicitly. So far I have observed that at least the imaginary part
     # is effectively zero. Next I want to check that for a particular length q only the 
     # magnitude of the vector q matters but not the direction, i.e. two q vectors with
     # the same length should return the same answer for the summation term in Sn(Q) 
-    frames = test.make_frame_inds(20.0)
+    frames = test.make_frame_inds(dt)
     print frames
     
     unit_vec = np.array([1,1,1])/np.sqrt(3.)
@@ -153,13 +153,15 @@ def test_two_point_ft(Qs,R_max,dt):
     for Q in Qs:
         print "calculating for %.2f" % Q
         this_q = Q * unit_vec
-        sf2 = [test.two_point_struct_factor(this_q,R_max,this_frame) for this_frame in frames]
+        sf2 = [test.two_point_struct_factor(this_q,R_max,this_frame)[0] for this_frame in frames]
         Sn_Q2.append(np.mean(sf2))
         
-        sf1 = [test.two_point_struct_factor(-this_q,R_max,this_frame) for this_frame in frames]
+        this_q = Q * np.array([1,-1,1])/np.sqrt(3.)
+        sf1 = [test.two_point_struct_factor(this_q,R_max,this_frame)[0] for this_frame in frames]
         Sn_Q1.append(np.mean(sf2))
         
-    Sn_Q = np.array(Sn_Q)
+    Sn_Q2 = np.array(Sn_Q2)
+    Sn_Q1 = np.array(Sn_Q1)
     fig = plt.figure()
     plt.plot(Qs,np.abs(Sn_Q2),label='q')
     plt.plot(Qs,np.abs(Sn_Q1),label='-q')
@@ -167,6 +169,46 @@ def test_two_point_ft(Qs,R_max,dt):
     plt.xlabel('Q')
     plt.ylabel('sum of fourier terms')
     fig.savefig(output_path+'/test_ft.png')
+    plt.close(fig)
+    
+def test2_two_point_ft(Qs, R_max, dt = 20.0):
+    frames = test.make_frame_inds(dt)
+    sin_term = []
+    
+    unit_vec = np.array([1,1,1])/np.sqrt(3.)
+    Sn_Q = []
+    for Q in Qs:
+        print "calculating for %.2f" % Q
+        this_q = Q * unit_vec
+        sf = [test.two_point_struct_factor(this_q,R_max,this_frame) for this_frame in frames]
+        this_mean = np.mean(sf,axis = 0)
+        Sn_Q.append(this_mean[0])
+        sin_term.append(this_mean[1])
+        
+    fig, (ax1,ax2) = plt.subplots(1,2,sharex = True,sharey = True)
+    ax1.plot(Qs,np.abs(Sn_Q))
+    
+    ax2.plot(Qs,sin_term)
+    ax1.set_title('explicit ft')
+    ax2.set_title('Debye formula')
+    # plt.legend(loc=4)
+#     plt.xlabel('Q')
+#     plt.ylabel('sum of fourier terms')
+    fig.savefig(output_path+'/test2_ft.png')
+    plt.close(fig)
+        
+def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
+    S_q,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5,return_three=False)
+    
+    fig,(ax1,ax2) = plt.subplots(1,2,sharey=True)
+    ax1.plot(psi,S_q)
+    ax1.set_title('Intensity vs psi')
+    ax1.set_xlabel('psi')
+    ax1.set_ylabel('Intensity (a.u.)')
+    ax2.plot(phi,S_q)
+    ax2.set_title('Intensity vs phi')
+    ax2.set_xlabel('phi')
+    fig.savefig(output_path+'/corr.png')
     plt.close(fig)
 
 ##############################################################################
@@ -176,13 +218,13 @@ def test_two_point_ft(Qs,R_max,dt):
 Rs = np.linspace(0.2,0.4,10)
 
 R_max = 0.5 # nm
-dt = 8.0 # ps
+dt = 20.0 # ps
 Qs = 2.*np.pi*np.linspace(0.0,1.5/R_water,10)
 
-ts = np.linspace(1,10,10)
+ts = np.linspace(1,10,2)
+
+q = 1/0.3*np.pi*2.0
+theta_1 = np.pi/12.
 
 
-
-
-
-test_two_point_ft(Qs,R_max,dt)
+test_corr(q,theta_1,dt)
