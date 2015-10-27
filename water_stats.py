@@ -189,7 +189,7 @@ class WaterStats:
         
         self.ssf = [np.array(Qs), np.array(S_Q), np.array(S_Qerr)]
 
-    def make_tthd(self,vertex_ind,cut_off,frame_ind):
+    def make_tthd(self,vertex_ind,cut_off,frame_ind, return_three = False):
         """
         Given index of one vertex, find three other vertices within radius cut_off to form
         a unique tetrahedron in one single frame of traj
@@ -204,8 +204,16 @@ class WaterStats:
         for this_tthd in tthd_inds:
             # representing a tetrahedron with just two vectors, is this even right?
             r_ij = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[0],:]
+            r_ik = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[1],:]
+            r_il = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[2],:]
+            
             r_kl = xyz_pos[0,this_tthd[1],:]- xyz_pos[0,this_tthd[2],:] # nm
-            tthds.append((r_ij,r_kl))
+            
+            # alternative, return three vectors
+            if return_three:
+                tthds.append((r_ij,r_ik,r_il))
+            else:
+                tthds.append((r_ij,r_kl))
         return tthds 
     
     def make_pairs(self,vertex_ind,cut_off,frame_ind):
@@ -221,11 +229,20 @@ class WaterStats:
         
     def two_point_struct_factor(self,q1,*args):
         sum = 0
+        sin_sum = 0
+        
+        q_norm = np.linalg.norm(q1)
         for this_water in self.water_inds:
             pairs = self.make_pairs(this_water,*args)
             for pp in pairs:
+                r_norm = np.linalg.norm(pp)
+                if q_norm == 0:
+                    sin_sum += 1
+                else:
+                    sin_sum += np.sin(q_norm*r_norm)/(q_norm*r_norm)
                 sum += np.exp(1j*np.sum(pp*q1))
-        return sum/self.n_waters+1
+         
+        return sum/self.n_waters+1, sin_sum/self.n_waters + 1
         
     def make_frame_inds(self,dt):
         """
@@ -235,39 +252,82 @@ class WaterStats:
         frame_steps= [step+random.randint(-int(step/2),int(step/2)) \
         for ii in range(int(self.total_time/dt))]
         
-        while sum(frame_steps)>self.n_frames:
+        while sum(frame_steps)>self.n_frames-1:
             frame_steps = frame_steps[:-1]
         
         return np.cumsum(frame_steps)
         
-    def four_point_struct_factor(self,q1,q2,*args):
+    def four_point_struct_factor(self,q1,q2,q3,cut_off,frame_ind,return_three=False):
         """
         Sums all the fourier terms in one frame of simulation
         q1: array, 3-d vector
         q2: array, ed vector
         """
+        
         sum = 0
         for this_water in self.water_inds:
-            tthds = self.make_tthd(this_water,*args)
-            for tt in tthds:
-                sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2))
+            tthds = self.make_tthd(this_water,cut_off,frame_ind,return_three = return_three)
+            if len(tthds) == 3:
+                for tt in tthds:
+                    sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2)) \
+                    *np.exp(1j*np.sum(tt[2]*q3))
+            else:
+                for tt in tthds:
+                    sum += np.linalg.norm(np.exp(1j*np.sum(tt[0]*q1)))**2.0 \
+                    *np.linalg.norm(np.exp(1j*np.sum(tt[1]*q2)))**2.0
         return sum
+
+    def correlator(self,q,theta_1,dt,cut_off = 0.5,return_three=False):
+        """
+        Assume incident beam is along the z axis and water box sample is at origin
+        
+        q: magnitude of the q vectors, assumed to be same for now
+        theta_1: 2*theta_1 is the angle between the incident beam and the q vector 
+        dt: average time between frames of simulation to sample
+        cut_off: distance cutoff for making tthds. default is 0.5 nm
+        
+        """
+        
+        frames = self.make_frame_inds(dt)
+        
+        q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+        
+        S_q = []
+        psi = []
+        
+        phi = np.linspace(0,np.pi*2.0,2)
+        
+        for this_phi in phi:
+            q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
+            sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
+            
+            S_q.append(np.mean(sf))
+            psi.append(np.arccos(np.dot(q1,q2)/q**2.0))
+
+            
+        return np.array(S_q),np.array(psi),phi
                 
 ##############################################################################
 # test
 ##############################################################################
-# 
-# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-# traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
-# print ('here is some info about the trajectory we are looking at:')
-# print traj
-# test = WaterStats(traj)
+
+data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+print ('here is some info about the trajectory we are looking at:')
+print traj
+test = WaterStats(traj)
 
 # tthd = test.make_tthd(120,0.5,0)
 # print len(tthd)
 # print tthd[815]
+q1 = np.array([-1,-1,1])/np.sqrt(3.)
+# vec2 = test.four_point_struct_factor(q1,-q1,q1,0.5,10)
+# print vec2
+# print "it's magnitude is %g" % np.abs(vec2)
+# vec3 = test.four_point_struct_factor(q1,-q1,q1,0.5,10,return_three = True)
+# print vec3
+# print "it's magnitude is %g" % np.abs(vec3)
 
-#print test.four_point_struct_factor(q1,q1,0.5,10)
 # frames = test.make_frame_inds(8.0)
 # 
 # for this_frame in frames
