@@ -200,11 +200,12 @@ def test2_two_point_ft(Qs, R_max, dt = 20.0):
     plt.close(fig)
         
 def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
-    S_q,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5,return_three=False)
+    S_q,S_qerr,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5,return_three=False)
     
     fig = plt.figure()
-    plt.plot(psi,S_q,'o')
-    plt.xlabel("psi (rad)")
+    plt.errorbar(phi,S_q,yerr=S_qerr)
+    plt.plot(phi,S_q,'--')
+    plt.xlabel("phi (rad)")
     plt.ylabel("C(psi)")
     plt.title("C(q1,q2,psi) with q1 = q2 = q")
     # fig,(ax1,ax2) = plt.subplots(1,2,sharey=True)
@@ -225,7 +226,7 @@ def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
 Rs = np.linspace(0.2,0.4,10)
 
 R_max = 0.5 # nm
-dt = 80.0 # ps
+dt = 8.0 # ps
 Qs = 2.*np.pi*np.linspace(0.0,1.5/R_water,10)
 
 ts = np.linspace(1,10,3)
