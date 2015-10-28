@@ -275,14 +275,14 @@ class WaterStats:
                 for tt in tthds:
                     # derived new formula, ingnoring form factor for now for constant q
                     sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
-        aa = [3.0485,2.2868,1.5463,0.867]
-        bb = [13.2771,5.7011,0.3239,32.9089]
-        cc = 0.2580
-        form_factor = cc
-        for this_a,this_b in zip(aa,bb):
-            form_factor += this_a * np.exp(-this_b*(np.linalg.norm(q1)/(4*np.pi))**2.0)
+        # aa = [3.0485,2.2868,1.5463,0.867]
+#         bb = [13.2771,5.7011,0.3239,32.9089]
+#         cc = 0.2580
+#         form_factor = cc
+#         for this_a,this_b in zip(aa,bb):
+#             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(q1)/(4*np.pi))**2.0)
          
-        return 1/self.n_waters**2.0*sum*form_factor**4.0*4.
+        return 1/self.n_waters**2.0*sum #*form_factor**4.0*4.
     
     def atomic_form_factor(self,element):
         """computes the atomic form factor givent the element
@@ -305,19 +305,21 @@ class WaterStats:
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
         
         S_q = []
+        S_qerr = []
         psi = []
         
-        phi = np.linspace(0,2.*np.pi,10)
+        phi = np.linspace(-np.pi,np.pi,10)
         
         for this_phi in phi:
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
             sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
+            S_qerr.append(np.std(sf)/np.sqrt(len(sf)))
             
             S_q.append(np.mean(sf))
             psi.append(np.arccos(np.dot(q1/q,q2/q)))
 
             
-        return np.array(S_q),np.array(psi),phi
+        return np.array(S_q),np.array(S_qerr),np.array(psi),phi
                 
 ##############################################################################
 # test
