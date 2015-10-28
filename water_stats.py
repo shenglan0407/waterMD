@@ -273,8 +273,8 @@ class WaterStats:
                     *np.exp(1j*np.sum(tt[2]*q3))
             else:
                 for tt in tthds:
-                    sum += np.linalg.norm(np.exp(1j*np.sum(tt[0]*q1)))**2.0 \
-                    *np.linalg.norm(np.exp(1j*np.sum(tt[1]*q2)))**2.0
+                    sum += np.linalg.norm(np.exp(1j*np.dot(tt[0],q1)))**2.0 \
+                    *np.linalg.norm(np.exp(1j*np.dot(tt[1],q2)))**2.0
         return sum
 
     def correlator(self,q,theta_1,dt,cut_off = 0.5,return_three=False):
@@ -302,7 +302,7 @@ class WaterStats:
             sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
             
             S_q.append(np.mean(sf))
-            psi.append(np.arccos(np.dot(q1,q2)/q**2.0))
+            psi.append(np.arccos(np.dot(q1/q,q2/q)))
 
             
         return np.array(S_q),np.array(psi),phi
@@ -311,16 +311,37 @@ class WaterStats:
 # test
 ##############################################################################
 
-data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+data_path = '/home/shenglan/GitHub/waterMD/data'
 traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj)
 
-# tthd = test.make_tthd(120,0.5,0)
-# print len(tthd)
-# print tthd[815]
-q1 = np.array([-1,-1,1])/np.sqrt(3.)
+
+this_phi = np.pi/4.
+q = 1/0.3*np.pi*2.0
+theta_1 = np.pi/12.
+q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
+print np.arccos(np.dot(q1/q,q2/q))
+
+tthd = test.make_tthd(120,0.5,0)
+print len(tthd)
+print tthd[0][0]
+print tthd[0][1]
+
+
+print np.linalg.norm(np.exp(1j*np.dot(tthd[0][0],q1))*np.exp(1j*np.dot(tthd[0][1],q2)))**2.0
+# # print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+# 
+# this_phi = np.pi/6
+# q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
+# # print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+# 
+# # q1 = []
+# print test.four_point_struct_factor(q1,2*q1,q1,0.5,10)
+# 
 # vec2 = test.four_point_struct_factor(q1,-q1,q1,0.5,10)
 # print vec2
 # print "it's magnitude is %g" % np.abs(vec2)

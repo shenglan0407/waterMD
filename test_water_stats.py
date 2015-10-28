@@ -31,7 +31,8 @@ import matplotlib.pyplot as plt
 # Code
 ##############################################################################
 
-data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+data_path = '/home/shenglan/GitHub/waterMD/data'
 traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
@@ -39,7 +40,8 @@ test = WaterStats(traj)
 
 R_water = 0.3
 
-output_path = '/Users/shenglanqiao/Documents/GitHub/waterMD/output'
+# output_path = '/Users/shenglanqiao/Documents/GitHub/waterMD/output'
+output_path = '/home/shenglan/GitHub/waterMD/output'
 
 def test_rdf(r_range):
     test.radial_dist(r_range)
@@ -201,11 +203,11 @@ def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
     S_q,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5,return_three=False)
     
     fig,(ax1,ax2) = plt.subplots(1,2,sharey=True)
-    ax1.plot(psi,S_q)
+    ax1.plot(psi,S_q,'o')
     ax1.set_title('Intensity vs psi')
     ax1.set_xlabel('psi')
     ax1.set_ylabel('Intensity (a.u.)')
-    ax2.plot(phi,S_q)
+    ax2.plot(phi,S_q,'o')
     ax2.set_title('Intensity vs phi')
     ax2.set_xlabel('phi')
     fig.savefig(output_path+'/corr.png')
