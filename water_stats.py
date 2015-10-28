@@ -273,10 +273,21 @@ class WaterStats:
                     *np.exp(1j*np.sum(tt[2]*q3))
             else:
                 for tt in tthds:
-                    # derived new formula, ingnoring form factor for now
-                    sum += 
-                    
-        return sum
+                    # derived new formula, ingnoring form factor for now for constant q
+                    sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+        aa = [3.0485,2.2868,1.5463,0.867]
+        bb = [13.2771,5.7011,0.3239,32.9089]
+        cc = 0.2580
+        form_factor = cc
+        for this_a,this_b in zip(aa,bb):
+            form_factor += this_a * np.exp(-this_b*(np.linalg.norm(q1)/(4*np.pi))**2.0)
+         
+        return 1/self.n_waters**2.0*sum*form_factor**4.0*4.
+    
+    def atomic_form_factor(self,element):
+        """computes the atomic form factor givent the element
+        """
+        pass
 
     def correlator(self,q,theta_1,dt,cut_off = 0.5,return_three=False):
         """
@@ -296,7 +307,7 @@ class WaterStats:
         S_q = []
         psi = []
         
-        phi = np.linspace(0,np.pi*2.0,2)
+        phi = np.linspace(0,2.*np.pi,10)
         
         for this_phi in phi:
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
@@ -313,32 +324,26 @@ class WaterStats:
 ##############################################################################
 
 # data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-data_path = '/home/shenglan/GitHub/waterMD/data'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
-print ('here is some info about the trajectory we are looking at:')
-print traj
-test = WaterStats(traj)
-
-
-this_phi = np.pi/4.
-q = 1/0.3*np.pi*2.0
-theta_1 = np.pi/12.
-q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
-q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
-print np.arccos(np.dot(q1/q,q2/q))
-
-tthd = test.make_tthd(120,0.5,0)
-print len(tthd)
-print tthd[0][0]
-print tthd[0][1]
-
-
-print np.linalg.norm(np.exp(1j*np.dot(tthd[0][0],q1))*np.exp(1j*np.dot(tthd[0][1],q2)))**2.0
-# # print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+# data_path = '/home/shenglan/GitHub/waterMD/data'
+# traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+# print ('here is some info about the trajectory we are looking at:')
+# print traj
+# test = WaterStats(traj)
 # 
-# this_phi = np.pi/6
+# 
+# this_phi = np.pi/4.
+# q = 1/0.3*np.pi*2.0
+# theta_1 = np.pi/12.
+# q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
 # q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
-# # print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+# print np.arccos(np.dot(q1/q,q2/q))
+# 
+# print test.four_point_struct_factor(q1,-q2,q2,0.5,10)
+# 
+# this_phi = np.pi/3
+# q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
+# print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+
 # 
 # # q1 = []
 # print test.four_point_struct_factor(q1,2*q1,q1,0.5,10)
