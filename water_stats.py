@@ -273,8 +273,9 @@ class WaterStats:
                     *np.exp(1j*np.sum(tt[2]*q3))
             else:
                 for tt in tthds:
-                    sum += np.linalg.norm(np.exp(1j*np.dot(tt[0],q1)))**2.0 \
-                    *np.linalg.norm(np.exp(1j*np.dot(tt[1],q2)))**2.0
+                    # derived new formula, ingnoring form factor for now
+                    sum += 
+                    
         return sum
 
     def correlator(self,q,theta_1,dt,cut_off = 0.5,return_three=False):
