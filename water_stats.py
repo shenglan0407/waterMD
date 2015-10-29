@@ -21,6 +21,9 @@
 
 import mdtraj as md
 
+import os
+import pickle
+
 import numpy as np
 from itertools import combinations, product
 import matplotlib.pyplot as plt
@@ -42,7 +45,11 @@ class WaterStats:
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
         
         # dictionary to store all tthd vectors, keys are frame numbers, 0-indexed
-        self.all_tthds = {}
+        if os.path.isfile('all_tthds.pkl'):
+            self.all_tthds = pickle.load(open('all_tthds.pkl','rb'))
+        
+        else:
+            self.all_tthds = {}
 
         
 
@@ -269,7 +276,7 @@ class WaterStats:
         
         sum = 0
         if frame_ind in self.all_tthds:
-            print "recycling!"
+            print "recycling for frame %d!" % frame_ind
             for tt in self.all_tthds[frame_ind]:
                 
                 # derived new formula, ingnoring form factor for now for constant q
@@ -314,6 +321,9 @@ class WaterStats:
         """
         
         frames = self.make_frame_inds(dt)
+        frames = [62]
+        print "frames used for averaging..."
+        print frames
         
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
         
@@ -321,9 +331,10 @@ class WaterStats:
         S_qerr = []
         psi = []
         
-        phi = np.linspace(-np.pi,np.pi,2)
+        phi = np.linspace(-np.pi,np.pi,1)
         
         for this_phi in phi:
+            print "calculating for phi = %.2f" % this_phi
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
             sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
             S_qerr.append(np.std(sf)/np.sqrt(len(sf)))
@@ -333,6 +344,8 @@ class WaterStats:
 
             
         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
+    def save_tthds(self):
+        pickle.dump(self.all_tthds,open('all_tthds.pkl','wb'),protocol = 2)
                 
 ##############################################################################
 # test
