@@ -236,6 +236,5 @@ ts = np.linspace(1,10,3)
 q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
 
-
-#test_corr(q,theta_1,dt)
+test_corr(q,theta_1,dt)
 test.save_tthds()

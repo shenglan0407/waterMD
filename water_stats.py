@@ -321,7 +321,7 @@ class WaterStats:
         """
         
         frames = self.make_frame_inds(dt)
-        frames = [62]
+    
         print "frames used for averaging..."
         print frames
         
@@ -341,6 +341,7 @@ class WaterStats:
             
             S_q.append(np.mean(sf))
             psi.append(np.arccos(np.dot(q1/q,q2/q)))
+            np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
 
             
         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
