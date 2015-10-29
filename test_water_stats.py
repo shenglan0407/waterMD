@@ -202,8 +202,8 @@ def test2_two_point_ft(Qs, R_max, dt = 20.0):
 def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
     S_q,S_qerr,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5,return_three=False)
     
-    print test.all_tthds.keys()
-    print len(test.all_tthds[test.all_tthds.keys()[0]])
+    #print test.all_tthds.keys()
+    #print len(test.all_tthds[test.all_tthds.keys()[0]])
     fig = plt.figure()
     plt.errorbar(phi,S_q,yerr=S_qerr)
     plt.plot(phi,S_q,'--')
@@ -237,4 +237,5 @@ q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
 
 
-test_corr(q,theta_1,dt)
+#test_corr(q,theta_1,dt)
+test.save_tthds()
