@@ -40,6 +40,9 @@ class WaterStats:
         self.total_time = self.time_step*self.n_frames # in ps
         
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
+        
+        # dictionary to store all tthd vectors, keys are frame numbers, 0-indexed
+        self.all_tthds = {}
 
         
 
@@ -265,16 +268,26 @@ class WaterStats:
         """
         
         sum = 0
-        for this_water in self.water_inds:
-            tthds = self.make_tthd(this_water,cut_off,frame_ind,return_three = return_three)
-            if len(tthds) == 3:
-                for tt in tthds:
-                    sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2)) \
-                    *np.exp(1j*np.sum(tt[2]*q3))
-            else:
-                for tt in tthds:
-                    # derived new formula, ingnoring form factor for now for constant q
-                    sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+        if frame_ind in self.all_tthds:
+            print "recycling!"
+            for tt in self.all_tthds[frame_ind]:
+                
+                # derived new formula, ingnoring form factor for now for constant q
+                
+                sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+        else:
+            self.all_tthds.update({frame_ind:[]})
+            for this_water in self.water_inds:
+                this_tthds = self.make_tthd(this_water,cut_off,frame_ind,return_three = return_three)
+                self.all_tthds[frame_ind].extend(this_tthds)
+                if len(this_tthds) == 3:
+                    for tt in tthds:
+                        sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2)) \
+                        *np.exp(1j*np.sum(tt[2]*q3))
+                else:
+                    for tt in this_tthds:
+                        # derived new formula, ingnoring form factor for now for constant q
+                        sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
         # aa = [3.0485,2.2868,1.5463,0.867]
 #         bb = [13.2771,5.7011,0.3239,32.9089]
 #         cc = 0.2580
@@ -308,7 +321,7 @@ class WaterStats:
         S_qerr = []
         psi = []
         
-        phi = np.linspace(-np.pi,np.pi,10)
+        phi = np.linspace(-np.pi,np.pi,2)
         
         for this_phi in phi:
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
