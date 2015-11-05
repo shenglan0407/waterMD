@@ -1,6 +1,7 @@
 \documentclass[20pt]{article}
 \usepackage{mathtools}
 \usepackage{amsmath}
+\usepackage{siunitx}
 \usepackage{commath}
 \usepackage{graphicx}
 \usepackage{float}
@@ -29,7 +30,43 @@ where $r_{ij}= \vec{r_i}-\vec{r_j}$ and $Q$ is the magnitude of $\vec{q}$.
 
 Averaging over many independent simulation frames gives an estimate from the simulation of $S(Q)$. There is also a finite-size effect introduced by the simulation box. See the two Salcuse papers in the notes for details. The finite-size effect is implemented in the code. 
 
-I have done some checking to make sure that the explicit Fourier transform makes sense with my simulation data. So far I have checked that it produces a small imaginary part, and also seems to be only dependent on the magnitude of $\vec{q}$ but not its pointing. Also, equations~\ref{eq:ft_sum} and ~\ref{eq:debye_sum} give the same answer when I use them to compute $S(Q)$ from averaging over independent frames from the simulations. This makes me think that I have been doing the explicit Fourier transform correctly for the radial distribution.
+I have done some checking to make sure that the explicit Fourier transform makes sense with my simulation data. So far I have checked that it produces a small imaginary part, and also seems to be only dependent on the magnitude of $\vec{q}$ but not its pointing. Also, equations~\ref{eq:ft_sum} and~\ref{eq:debye_sum} give the same answer when I use them to compute $S(Q)$ from averaging over independent frames from the simulations. This makes me think that I have been doing the explicit Fourier transform correctly for the radial distribution.
 
-\section{Direct Calculation of correlation}
+\section{Direct calculation of the correlator from simulation}
+The intensity from scattering from a pair of water molecules is:
+\begin{equation} \label{eq:Ipair}
+I(\vec{q},\omega) = \abs{\sum_{i}^{2} f(q) e^{-i \vec{q} \cdot (R_{\omega} \vec{r_i})}}^2
+\end{equation}
+where $R_{\omega}$ is the rotation operator by angle $\omega$ and $f(q)$ is the atomic form factor for oxygen. I am ignoring hydrogen for now since it does not scatter x-ray strongly. If we just expand equation~\ref{eq:Ipair} explicitly, we have
+\begin{equation} \label{eq:Ipair_exp}
+I(\vec{q},\omega) = 2\abs{f(q)}^2 (1+\cos{\vec{q} \cdot (R_{\omega} \vec{r_{12}})} ).
+\end{equation}
+We want to compute, from the simulation data, the correlator between two pairs of water molecule, i.e. a single 4-point ensemble. The correlator is the following integral:
+\begin{equation} \label{eq:corr}
+C(\vec{q_1}, \vec{q_2}) = \int_{\omega} I(\vec{q_1},\omega) I(\vec{q_2},\omega) d\omega.
+\end{equation}
+Assuming our water box simulation is an good approximation of the statistical behavior of real water, we can estimate $C(\vec{q_1}, \vec{q_2})$ by summing over all possible 4-point ensemble in the simulations. Specifically,
+\begin{equation} \label{eq:est_corr}
+C(\vec{q_1}, \vec{q_2})  \propto \frac{ 4 \abs{f(q)}^4 }{M} \sum_{m=1}^{M} \sum^{N}_{i,j,k,l}  (1+\cos{\vec{q_1} \cdot (R_{\omega} \vec{r_{ij,m}})} ) (1+\cos{\vec{q_2} \cdot (R_{\omega} \vec{r_{kl,m}})} )
+\end{equation}
+where $N$ is the total number of water molecules in the simulation, the index $m$ denotes the $m$-th frame in the simulation. We are averaging over $M$ statistically independent frames. The summation over indices $i$, $j$, $k$, and $l$ are over all unique 4-point ensembles.
+
+The atomic form factor for oxygen is approximately the sum of some gaussian functions. With $0 < q < 25 \si{\angstrom} ^{-1}$, $f(q)$ is
+\begin{equation} \label{eq:Oform}
+f(q) = \sum_{i}^{4} a_i \exp{(-b_i (\frac{q}{4\pi})^2)} + c
+\end{equation}
+and the $a_i$'s and $b_i$'s are constants summarized in the table below.
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|} 
+ \hline
+ $a_1$ & $b_1$ & $a_2$ & $b_2$ &$a_3$ & $b_3$ &$a_4$ & $b_4$ & $c$ \\ 
+ \hline
+3.0485 & 13.2771 & 2.2868 & 5.7011 & 1.5463 & 0.3239 & 0.867 & 32.9089 & 0.2508 \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+\section{Protocol of computation}
+
+
 \end{document} 
