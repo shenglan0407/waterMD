@@ -331,7 +331,7 @@ class WaterStats:
         S_qerr = []
         psi = []
         
-        phi = np.linspace(-np.pi,np.pi,1)
+        phi = np.linspace(-np.pi,np.pi,10)
         
         for this_phi in phi:
             print "calculating for phi = %.2f" % this_phi
@@ -341,11 +341,15 @@ class WaterStats:
             
             S_q.append(np.mean(sf))
             psi.append(np.arccos(np.dot(q1/q,q2/q)))
-            np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
+        self.save_tthds()
+        np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
 
             
         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
     def save_tthds(self):
+        """
+        pickle self.all_tthds
+        """
         pickle.dump(self.all_tthds,open('all_tthds.pkl','wb'),protocol = 2)
                 
 ##############################################################################

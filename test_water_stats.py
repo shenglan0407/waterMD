@@ -31,8 +31,8 @@ import matplotlib.pyplot as plt
 # Code
 ##############################################################################
 
-data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-# data_path = '/home/shenglan/GitHub/waterMD/data'
+# data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
+data_path = '/home/shenglan/GitHub/waterMD/data'
 traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
@@ -40,8 +40,8 @@ test = WaterStats(traj)
 
 R_water = 0.3
 
-output_path = '/Users/shenglanqiao/Documents/GitHub/waterMD/output'
-# output_path = '/home/shenglan/GitHub/waterMD/output'
+# output_path = '/Users/shenglanqiao/Documents/GitHub/waterMD/output'
+output_path = '/home/shenglan/GitHub/waterMD/output'
 
 def test_rdf(r_range):
     test.radial_dist(r_range)
@@ -228,7 +228,7 @@ def test_corr(q,theta_1,dt,cut_off = 0.5,return_three=False):
 Rs = np.linspace(0.2,0.4,10)
 
 R_max = 0.5 # nm
-dt = 50.0 # ps
+dt = 1.0 # ps
 Qs = 2.*np.pi*np.linspace(0.0,1.5/R_water,10)
 
 ts = np.linspace(1,10,3)
