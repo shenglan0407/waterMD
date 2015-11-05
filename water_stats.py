@@ -327,6 +327,7 @@ class WaterStats:
         print frames
         
         outfile = open('C(psi).txt','a')
+
         
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
         
