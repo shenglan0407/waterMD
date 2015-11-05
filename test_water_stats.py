@@ -237,4 +237,12 @@ q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
 
 test_corr(q,theta_1,dt)
-test.save_tthds()
+
+# f = open('C(psi).txt','a')
+# a = 1.049075
+# b=298689465
+# c=324.567
+# d=0.00000000098
+# f.write("%g,%g,%g,%g" % (a,b,c,d)+"\n")
+# f.close()
+

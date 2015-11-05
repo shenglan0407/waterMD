@@ -47,6 +47,7 @@ class WaterStats:
         # dictionary to store all tthd vectors, keys are frame numbers, 0-indexed
         if os.path.isfile('all_tthds.pkl'):
             self.all_tthds = pickle.load(open('all_tthds.pkl','rb'))
+            print "finished loading all_tthds.pkl"
         
         else:
             self.all_tthds = {}
@@ -325,6 +326,8 @@ class WaterStats:
         print "frames used for averaging..."
         print frames
         
+        outfile = open('C(psi).txt','a')
+        
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
         
         S_q = []
@@ -337,14 +340,22 @@ class WaterStats:
             print "calculating for phi = %.2f" % this_phi
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
             sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
-            S_qerr.append(np.std(sf)/np.sqrt(len(sf)))
             
-            S_q.append(np.mean(sf))
-            psi.append(np.arccos(np.dot(q1/q,q2/q)))
-        self.save_tthds()
-        np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
+            this_Sqerr = np.std(sf)/np.sqrt(len(sf))
+            S_qerr.append(this_Sqerr)
+            
+            this_Sq = np.mean(sf)
+            S_q.append(this_Sq)
+            
+            this_psi = np.arccos(np.dot(q1/q,q2/q))
+            psi.append(this_psi)
+            
+            outfile.write("%g,%g,%g,%g" % (this_Sq,this_Sqerr,this_psi,this_phi)+"\n")
+        #self.save_tthds()
+        #np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
 
-            
+        outfile.close()
+        
         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
     def save_tthds(self):
         """
