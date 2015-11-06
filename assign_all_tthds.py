@@ -37,11 +37,14 @@ ws = WaterStats(traj)
 cut_off = 0.5
 
 for this_frame in range(ws.n_frames):
-    tthds = []
-    for this_water in ws.water_inds:
-        tthds.extend(ws.make_tthd(this_water,cut_off,this_frame)) 
-    ws.all_tthds.create_dataset(str(this_frame),data = tthds)
-# 
+    if str(this_frame) in ws.all_tthds:
+        pass
+    else:
+        tthds = []
+        for this_water in ws.water_inds:
+            tthds.extend(ws.make_tthd(this_water,cut_off,this_frame)) 
+        ws.all_tthds.create_dataset(str(this_frame),data = tthds)
+
 # print len(tthds)
 # print tthds[0][0]
 
