@@ -235,8 +235,11 @@ ts = np.linspace(1,10,3)
 
 q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
+q1 = q*np.array([1,1,1])
+# test_corr(q,theta_1,dt)
+print test.four_point_struct_factor(q1,q1,q1,0.5,99)
 
-test_corr(q,theta_1,dt)
+test.all_tthds.close()
 # f = open('C(psi).txt','a')
 # a = 1.049075
 # b=298689465

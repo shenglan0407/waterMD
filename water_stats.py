@@ -35,7 +35,7 @@ import random
 ##############################################################################
 
 class WaterStats:
-    def __init__(self,traj):
+    def __init__(self,traj,read_mod='a'):
         self.traj = traj
         self.n_waters = traj.topology.n_residues
         self.water_inds = traj.topology.select_atom_indices(selection='water')
@@ -46,7 +46,8 @@ class WaterStats:
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
-        self.all_tthds = h5py.File('all_tthds.hdf5','a')
+        tthds_path = os.getcwd()+'/output_data/all_tthds.hdf5'
+        self.all_tthds = h5py.File(tthds_path,read_mod)
 
         
 
@@ -196,7 +197,7 @@ class WaterStats:
         
         self.ssf = [np.array(Qs), np.array(S_Q), np.array(S_Qerr)]
 
-    def make_tthd(self,vertex_ind,cut_off,frame_ind, return_three = False):
+    def make_tthd(self,vertex_ind,cut_off,frame_ind):
         """
         Given index of one vertex, find three other vertices within radius cut_off to form
         a unique tetrahedron in one single frame of traj
@@ -211,16 +212,9 @@ class WaterStats:
         for this_tthd in tthd_inds:
             # representing a tetrahedron with just two vectors, is this even right?
             r_ij = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[0],:]
-            r_ik = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[1],:]
-            r_il = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_tthd[2],:]
-            
             r_kl = xyz_pos[0,this_tthd[1],:]- xyz_pos[0,this_tthd[2],:] # nm
             
-            # alternative, return three vectors
-            if return_three:
-                tthds.append([r_ij,r_ik,r_il])
-            else:
-                tthds.append([r_ij,r_kl])
+            tthds.append([r_ij,r_kl])
         return tthds 
     
     def make_pairs(self,vertex_ind,cut_off,frame_ind):
@@ -267,7 +261,7 @@ class WaterStats:
     def assign_all_tthds(self):
         pass
         
-    def four_point_struct_factor(self,q1,q2,q3,cut_off,frame_ind,return_three=False):
+    def four_point_struct_factor(self,q1,q2,cut_off,frame_ind):
         """
         Sums all the fourier terms in one frame of simulation
         q1: array, 3-d vector
@@ -275,26 +269,22 @@ class WaterStats:
         """
         
         sum = 0
-        if frame_ind in self.all_tthds:
+        if str(frame_ind) in self.all_tthds:
             print "recycling for frame %d!" % frame_ind
-            for tt in self.all_tthds[frame_ind]:
+            for tt in self.all_tthds[str(frame_ind)]:
                 
                 # derived new formula, ingnoring form factor for now for constant q
                 
                 sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
         else:
-            self.all_tthds.update({frame_ind:[]})
+            this_tthds = []
             for this_water in self.water_inds:
-                this_tthds = self.make_tthd(this_water,cut_off,frame_ind,return_three = return_three)
-                self.all_tthds[frame_ind].extend(this_tthds)
-                if len(this_tthds) == 3:
-                    for tt in tthds:
-                        sum += np.exp(1j*np.sum(tt[0]*q1))*np.exp(1j*np.sum(tt[1]*q2)) \
-                        *np.exp(1j*np.sum(tt[2]*q3))
-                else:
-                    for tt in this_tthds:
-                        # derived new formula, ingnoring form factor for now for constant q
-                        sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+                this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
+            self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
+
+            for tt in this_tthds:
+                # derived new formula, ingnoring form factor for now for constant q
+                sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
         # aa = [3.0485,2.2868,1.5463,0.867]
 #         bb = [13.2771,5.7011,0.3239,32.9089]
 #         cc = 0.2580
@@ -309,7 +299,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,theta_1,dt,cut_off = 0.5,return_three=False):
+    def correlator(self,q,theta_1,dt,cut_off = 0.5):
         """
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -339,7 +329,7 @@ class WaterStats:
         for this_phi in phi:
             print "calculating for phi = %.2f" % this_phi
             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
-            sf = [self.four_point_struct_factor(q1,q2,q2,cut_off,this_fr,return_three=return_three) for this_fr in frames]
+            sf = [self.four_point_struct_factor(q1,q2,cut_off,this_fr) for this_fr in frames]
             
             this_Sqerr = np.std(sf)/np.sqrt(len(sf))
             S_qerr.append(this_Sqerr)
@@ -351,9 +341,7 @@ class WaterStats:
             psi.append(this_psi)
             
             outfile.write("%g,%g,%g,%g" % (this_Sq,this_Sqerr,this_psi,this_phi)+"\n")
-        #self.save_tthds()
-        #np.savetxt('C(psi).txt',np.array([np.array(S_q),np.array(S_qerr),np.array(psi),phi]))
-
+        
         outfile.close()
         
         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
@@ -382,20 +370,20 @@ class WaterStats:
 # q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
 # print np.arccos(np.dot(q1/q,q2/q))
 # 
-# print test.four_point_struct_factor(q1,-q2,q2,0.5,10)
+# print test.four_point_struct_factor(q1,-q2,0.5,10)
 # 
 # this_phi = np.pi/3
 # q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
-# print test.four_point_struct_factor(q1,q2,q2,0.5,10)
+# print test.four_point_struct_factor(q1,q2,0.5,10)
 
 # 
 # # q1 = []
-# print test.four_point_struct_factor(q1,2*q1,q1,0.5,10)
+# print test.four_point_struct_factor(q1,2*q1,0.5,10)
 # 
-# vec2 = test.four_point_struct_factor(q1,-q1,q1,0.5,10)
+# vec2 = test.four_point_struct_factor(q1,-q1,0.5,10)
 # print vec2
 # print "it's magnitude is %g" % np.abs(vec2)
-# vec3 = test.four_point_struct_factor(q1,-q1,q1,0.5,10,return_three = True)
+# vec3 = test.four_point_struct_factor(q1,-q1,0.5,10)
 # print vec3
 # print "it's magnitude is %g" % np.abs(vec3)
 
