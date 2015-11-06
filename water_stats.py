@@ -23,6 +23,7 @@ import mdtraj as md
 
 import os
 import pickle
+import h5py
 
 import numpy as np
 from itertools import combinations, product
@@ -44,13 +45,8 @@ class WaterStats:
         
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
         
-        # dictionary to store all tthd vectors, keys are frame numbers, 0-indexed
-        if os.path.isfile('all_tthds.pkl'):
-            self.all_tthds = pickle.load(open('all_tthds.pkl','rb'))
-            print "finished loading all_tthds.pkl"
-        
-        else:
-            self.all_tthds = {}
+        # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
+        self.all_tthds = h5py.File('all_tthds.hdf5','a')
 
         
 
@@ -222,9 +218,9 @@ class WaterStats:
             
             # alternative, return three vectors
             if return_three:
-                tthds.append((r_ij,r_ik,r_il))
+                tthds.append([r_ij,r_ik,r_il])
             else:
-                tthds.append((r_ij,r_kl))
+                tthds.append([r_ij,r_kl])
         return tthds 
     
     def make_pairs(self,vertex_ind,cut_off,frame_ind):
@@ -267,6 +263,9 @@ class WaterStats:
             frame_steps = frame_steps[:-1]
         
         return np.cumsum(frame_steps)
+        
+    def assign_all_tthds(self):
+        pass
         
     def four_point_struct_factor(self,q1,q2,q3,cut_off,frame_ind,return_three=False):
         """
