@@ -29,6 +29,7 @@ import numpy as np
 from itertools import combinations, product
 import matplotlib.pyplot as plt
 import random
+from joblib import Parallel, delayed
 
 ##############################################################################
 # Code
@@ -261,38 +262,60 @@ class WaterStats:
     def assign_all_tthds(self):
         pass
         
-    def four_point_struct_factor(self,q1,q2,cut_off,frame_ind):
+    def compute_term_four_point(self,q_pair,tthd_pair):
+        return (1+np.cos(np.dot(q_pair[0],tthd_pair[0])))*(1+np.cos(np.dot(q_pair[1],tthd_pair[1])))
+    
+    def four_point_struct_factor(self,qs,cut_off,frame_ind):
         """
         Sums all the fourier terms in one frame of simulation
-        q1: array, 3-d vector
-        q2: array, ed vector
+        qs: np.array, pairts of (q1,q2)
+        frame_ind: ind of a single frame
         """
-        
-        sum = 0
         if str(frame_ind) in self.all_tthds:
-            print "recycling for frame %d!" % frame_ind
-            this_tthds = self.all_tthds[str(frame_ind)]
-            for tt in this_tthds:                
-                # derived new formula, ingnoring form factor for now for constant q
-                
-                sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+                print "recycling for frame %d!" % frame_ind
+                this_tthds = self.all_tthds[str(frame_ind)]
         else:
             this_tthds = []
             for this_water in self.water_inds:
                 this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
             self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
-
-            for tt in this_tthds:
+        
+        corr_single_frame = []
+        for this_q in qs:
+            this_sum = 0
+            for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
-                sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+                this_sum += self.compute_term_four_point(this_q,tt)
+            corr_single_frame.append(this_sum)
+        
+        return corr_single_frame
+        
+        
+     #    sum = 0
+#         if str(frame_ind) in self.all_tthds:
+#             print "recycling for frame %d!" % frame_ind
+#             this_tthds = self.all_tthds[str(frame_ind)]
+#             for tt in this_tthds:                
+#                 # derived new formula, ingnoring form factor for now for constant q
+#                 
+#                 sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
+#         else:
+#             this_tthds = []
+#             for this_water in self.water_inds:
+#                 this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
+#             self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
+# 
+#             for tt in this_tthds:
+#                 # derived new formula, ingnoring form factor for now for constant q
+#                 sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
         # aa = [3.0485,2.2868,1.5463,0.867]
 #         bb = [13.2771,5.7011,0.3239,32.9089]
 #         cc = 0.2580
 #         form_factor = cc
 #         for this_a,this_b in zip(aa,bb):
 #             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(q1)/(4*np.pi))**2.0)
-         
-        return 1/self.n_waters**2.0*sum #*form_factor**4.0*4.
+#          
+#         return 1/self.n_waters**2.0*sum #*form_factor**4.0*4.
     
     def atomic_form_factor(self,element):
         """computes the atomic form factor givent the element
