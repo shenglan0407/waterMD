@@ -1,3 +1,7 @@
+constant q for both q-vectors
+q = 1/0.3*np.pi*2.0
+theta_1 = np.pi/12.
+phi = np.linspace(-np.pi,np.pi,10)
 C,err,psi,phi
 1.97412,0.00571331,1.0472,-3.14159
 1.9763,0.00577191,0.978233,-2.44346
