@@ -21,6 +21,7 @@
 
 import mdtraj as md
 
+import sys
 import os
 import pickle
 import h5py
@@ -30,6 +31,7 @@ from itertools import combinations, product
 import matplotlib.pyplot as plt
 import random
 import csv
+import time
 
 ##############################################################################
 # Code
@@ -273,8 +275,8 @@ class WaterStats:
         frame_ind: ind of a single frame
         """
         if str(frame_ind) in self.all_tthds:
-                print "recycling for frame %d!" % frame_ind
-                this_tthds = self.all_tthds[str(frame_ind)]
+            print "recycling for frame %d!" % frame_ind
+            this_tthds = self.all_tthds[str(frame_ind)]
         else:
             this_tthds = []
             for this_water in self.water_inds:
@@ -323,7 +325,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,theta_1,dt,cut_off = 0.5):
+    def correlator(self,q,theta_1,frames,phi, cut_off = 0.5):
         """
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -333,23 +335,43 @@ class WaterStats:
         cut_off: distance cutoff for making tthds. default is 0.5 nm
         
         """
+       
         
-        frames = self.make_frame_inds(dt)
-    
+        
+        
+
         print "frames used for averaging..."
         print frames
-        
+    
+    
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
-        q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi]
+        q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi])
+    
+        qs = np.array([[q1,this_q2] for this_q2 in q2])
         
-        qs = np.array(zip(q1,q2))
+        output = os.getcwd()+'/computed_results/corr_'+self.run_name+'.csv'
+        while os.path.isfile(output):
+            print 'Computed results exist, will not overwrite file'
+            input = raw_input('enter file indentifier here:')
+            output = os.getcwd()+'/computed_results/corr_'+self.run_name+'_'+input+'.csv'
         
+        with open(output,'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=' ',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            csvwriter.writerow(q1)
+            csvwriter.writerow(q2)
+            csvwriter.writerow(phi)
+            csvwriter.writerow(frames)
+        csvfile.close()
+
         for this_frame in frames:
+            print('computing for frame number %d...' % this_frame)
             this_row = self.four_point_struct_factor(qs,cut_off,this_frame)
-            with open(os.get_cwd()+'/data/corr_'+self.run_name+'.csv','w') as csvfile:
-                cvswriter = csv.writer(csvfile, delimiter=' ',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            with open(output,'a') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=' ',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
                 csvwriter.writerow(this_row)
+                csvfile.flush()
         
  ################################################################################       
         

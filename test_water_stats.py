@@ -27,16 +27,19 @@ import mdtraj as md
 import numpy as np
 import matplotlib.pyplot as plt
 
+import os
+import time
+
 ##############################################################################
 # Code
 ##############################################################################
 
 # data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
-data_path = '/home/shenglan/GitHub/waterMD/data'
+data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
-test = WaterStats(traj)
+test = WaterStats(traj,'')
 
 R_water = 0.3
 
@@ -199,27 +202,9 @@ def test2_two_point_ft(Qs, R_max, dt = 20.0):
     fig.savefig(output_path+'/test2_ft.png')
     plt.close(fig)
         
-def test_corr(q,theta_1,dt,cut_off = 0.5):
-    S_q,S_qerr,psi,phi = test.correlator(q,theta_1,dt,cut_off = 0.5)
+def test_corr(q,theta_1,dt,phi,cut_off = 0.5):
+    test.correlator(q,theta_1,dt,phi,cut_off = 0.5)
     
-    #print test.all_tthds.keys()
-    #print len(test.all_tthds[test.all_tthds.keys()[0]])
-    fig = plt.figure()
-    plt.errorbar(phi,S_q,yerr=S_qerr)
-    plt.plot(phi,S_q,'--')
-    plt.xlabel("phi (rad)")
-    plt.ylabel("C(psi)")
-    plt.title("C(q1,q2,psi) with q1 = q2 = q")
-    # fig,(ax1,ax2) = plt.subplots(1,2,sharey=True)
-#     ax1.plot(psi,S_q,'o')
-#     ax1.set_title('Intensity vs psi')
-#     ax1.set_xlabel('psi')
-#     ax1.set_ylabel('Intensity (a.u.)')
-#     ax2.plot(phi,S_q,'o')
-#     ax2.set_title('Intensity vs phi')
-#     ax2.set_xlabel('phi')
-    fig.savefig(output_path+'/corr.png')
-    plt.close(fig)
 
 ##############################################################################
 # test
@@ -235,9 +220,16 @@ ts = np.linspace(1,10,3)
 
 q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
-#q1 = q*np.array([1,1,1])
-test_corr(q,theta_1,dt)
-#print test.four_point_struct_factor(q1,q1,q1,0.5,99)
+q1 = q*np.array([1,1,1])
+phi = np.linspace(-np.pi,np.pi,10)
+qs = [[q1,q1]]
+
+frames = test.make_frame_inds(dt)
+tic = time.clock()
+test_corr(q,theta_1,frames,phi)
+toc = time.clock()
+
+print("Test Process time: %.2f" %(toc-tic))
 
 test.all_tthds.close()
 # f = open('C(psi).txt','a')
