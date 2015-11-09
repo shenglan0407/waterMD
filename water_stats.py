@@ -271,8 +271,8 @@ class WaterStats:
         sum = 0
         if str(frame_ind) in self.all_tthds:
             print "recycling for frame %d!" % frame_ind
-            for tt in self.all_tthds[str(frame_ind)]:
-                
+            this_tthds = self.all_tthds[str(frame_ind)]
+            for tt in this_tthds:                
                 # derived new formula, ingnoring form factor for now for constant q
                 
                 sum += (1+np.cos(np.dot(q1,tt[0])))*(1+np.cos(np.dot(q2,tt[1])))
@@ -341,6 +341,7 @@ class WaterStats:
             psi.append(this_psi)
             
             outfile.write("%g,%g,%g,%g" % (this_Sq,this_Sqerr,this_psi,this_phi)+"\n")
+            outfile.flush()
         
         outfile.close()
         
