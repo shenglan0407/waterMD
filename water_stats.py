@@ -29,25 +29,26 @@ import numpy as np
 from itertools import combinations, product
 import matplotlib.pyplot as plt
 import random
-from joblib import Parallel, delayed
+import csv
 
 ##############################################################################
 # Code
 ##############################################################################
 
 class WaterStats:
-    def __init__(self,traj,read_mod='a'):
+    def __init__(self,traj,run_name,read_mod='a'):
         self.traj = traj
         self.n_waters = traj.topology.n_residues
         self.water_inds = traj.topology.select_atom_indices(selection='water')
         self.time_step=traj.timestep # in ps
         self.n_frames = self.traj.n_frames
         self.total_time = self.time_step*self.n_frames # in ps
+        self.run_name = run_name
         
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
-        tthds_path = os.getcwd()+'/output_data/all_tthds.hdf5'
+        tthds_path = os.getcwd()+'/output_data/all_tthds_'+run_name+'.hdf5'
         self.all_tthds = h5py.File(tthds_path,read_mod)
 
         
@@ -338,37 +339,53 @@ class WaterStats:
         print "frames used for averaging..."
         print frames
         
-        outfile = open('C(psi).txt','a')
-
-        
         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+        q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi]
         
-        S_q = []
-        S_qerr = []
-        psi = []
+        qs = np.array(zip(q1,q2))
         
-        phi = np.linspace(-np.pi,np.pi,10)
+        for this_frame in frames:
+            this_row = self.four_point_struct_factor(qs,cut_off,this_frame)
+            with open(os.get_cwd()+'/data/corr_'+self.run_name+'.csv','w') as csvfile:
+                cvswriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                csvwriter.writerow(this_row)
         
-        for this_phi in phi:
-            print "calculating for phi = %.2f" % this_phi
-            q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
-            sf = [self.four_point_struct_factor(q1,q2,cut_off,this_fr) for this_fr in frames]
-            
-            this_Sqerr = np.std(sf)/np.sqrt(len(sf))
-            S_qerr.append(this_Sqerr)
-            
-            this_Sq = np.mean(sf)
-            S_q.append(this_Sq)
-            
-            this_psi = np.arccos(np.dot(q1/q,q2/q))
-            psi.append(this_psi)
-            
-            outfile.write("%g,%g,%g,%g" % (this_Sq,this_Sqerr,this_psi,this_phi)+"\n")
-            outfile.flush()
+ ################################################################################       
         
-        outfile.close()
-        
-        return np.array(S_q),np.array(S_qerr),np.array(psi),phi
+#          outfile = open('C(psi).txt','a')
+# 
+#         
+#         q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+#         
+#         S_q = []
+#         S_qerr = []
+#         psi = []
+#         
+#         phi = np.linspace(-np.pi,np.pi,10)
+#         
+#         for this_phi in phi:
+#             print "calculating for phi = %.2f" % this_phi
+#             q2 = np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]])
+#             sf = [self.four_point_struct_factor(q1,q2,cut_off,this_fr) for this_fr in frames]
+#             
+#             this_Sqerr = np.std(sf)/np.sqrt(len(sf))
+#             S_qerr.append(this_Sqerr)
+#             
+#             this_Sq = np.mean(sf)
+#             S_q.append(this_Sq)
+#             
+#             this_psi = np.arccos(np.dot(q1/q,q2/q))
+#             psi.append(this_psi)
+#             
+#             outfile.write("%g,%g,%g,%g" % (this_Sq,this_Sqerr,this_psi,this_phi)+"\n")
+#             outfile.flush()
+#         
+#         outfile.close()
+#         
+#         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
+    
+    
     def save_tthds(self):
         """
         pickle self.all_tthds
