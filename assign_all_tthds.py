@@ -24,16 +24,17 @@ import mdtraj as md
 import h5py
 from water_stats import WaterStats
 import numpy as np
+import os
 
 ##############################################################################
 # Code
 ##############################################################################
 
-data_path = '/home/shenglan/GitHub/waterMD/data'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+data_path = os.getcwd()+'/data'
+traj = md.load_trr(data_path+'/nvt-pr_run2.trr', top = data_path+'/water-sol_run2.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
-ws = WaterStats(traj)
+ws = WaterStats(traj,'run2')
 cut_off = 0.5
 
 for this_frame in range(ws.n_frames):
