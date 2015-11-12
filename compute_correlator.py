@@ -33,8 +33,10 @@ import time
 # Code
 ##############################################################################
 
+frames = np.arange(101)[1:25]
+run_name = 'run4'
+
 data_path = os.getcwd()+'/data'
-run_name = 'run3'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
@@ -44,7 +46,7 @@ q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
 phi = np.linspace(-np.pi,np.pi,10)
 dt = 1.0 # ps
-frames = np.arange(101)[75:]
+
 
 tic = time.clock()
 run.correlator(q,theta_1,frames,phi,cut_off = 0.5)
