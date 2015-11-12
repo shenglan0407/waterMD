@@ -31,10 +31,10 @@ import os
 ##############################################################################
 
 data_path = os.getcwd()+'/data'
-traj = md.load_trr(data_path+'/nvt-pr_run3.trr', top = data_path+'/water-sol_run3.gro')
+traj = md.load_trr(data_path+'/nvt-pr_run4.trr', top = data_path+'/water-sol_run4.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
-ws = WaterStats(traj,'run3')
+ws = WaterStats(traj,'run4')
 cut_off = 0.5
 
 for this_frame in range(ws.n_frames):
