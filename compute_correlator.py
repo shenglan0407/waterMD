@@ -44,7 +44,7 @@ q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
 phi = np.linspace(-np.pi,np.pi,10)
 dt = 1.0 # ps
-frames = np.arange(101)[:25]
+frames = np.arange(101)[75:]
 
 tic = time.clock()
 run.correlator(q,theta_1,frames,phi,cut_off = 0.5)
