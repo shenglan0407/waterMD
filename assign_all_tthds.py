@@ -32,7 +32,7 @@ import os
 
 run_name = 'run4'
 data_path = os.getcwd()+'/data'
-traj = md.load_trr(data_path+'/nvt-pr_'+run_name'.trr', top = data_path+'/water-sol_'+run_name'.gro')
+traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 ws = WaterStats(traj,run_name)

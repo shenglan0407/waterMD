@@ -51,7 +51,7 @@ class WaterStats:
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
         tthds_path = os.getcwd()+'/output_data/all_tthds_'+run_name+'.hdf5'
-        if os.isfile(tthds_path) and read_mod == 'a':
+        if os.path.isfile(tthds_path) and read_mod == 'a':
             input = raw_input('all_tthds database already exists. are you sure you want to append to it? [y or n]')
             if input =='y':
                 self.all_tthds = h5py.File(tthds_path,read_mod)
