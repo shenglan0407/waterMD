@@ -234,7 +234,7 @@ class WaterStats:
         pairs = []
         xyz_pos = self.traj[frame_ind].xyz
         for this_nb in nbs:
-            # representing a tetrahedron with just two vectors, is this even right?
+            
             r_ij = xyz_pos[0,vertex_ind,:]- xyz_pos[0,this_nb,:]
             pairs.append(r_ij)
         return pairs 
