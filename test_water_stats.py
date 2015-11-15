@@ -204,8 +204,60 @@ def test2_two_point_ft(Qs, R_max, dt = 20.0):
         
 def test_corr(q,theta_1,dt,phi,cut_off = 0.5):
     test.correlator(q,theta_1,dt,phi,cut_off = 0.5)
-    
 
+def nb_finder(cut_off,vertex_ind,frame_ind): 
+    nbs = md.compute_neighbors(test.traj[frame_ind],
+    cut_off,[vertex_ind],haystack_indices = test.water_inds)[0]
+    
+    return nbs
+
+def test_nb_convergence(cut_off,step,max_iterations = 100):
+
+    for this_ind in test.water_inds:
+        loop_count = 0
+        nbs = nb_finder(cut_off,this_ind,1)
+        try_cutoff = cut_off
+        while len(nbs) != 3 and loop_count<max_iterations:
+            loop_count += 1
+            if len(nbs) < 3:
+                try_cutoff += step
+                nbs = nb_finder(try_cutoff,this_ind,1)
+            else:
+                try_cutoff -= step
+                nbs = nb_finder(try_cutoff,this_ind,1)
+        if loop_count == max_iterations:
+            print this_ind
+            print nbs
+def f(a,N):
+    return np.argsort(a)[::-1][:N]
+           
+def test_nearest_nbs(cut_off,frame_ind):
+    nearest_nbs = []
+    for this_ind in test.water_inds:
+        nbs = md.compute_neighbors(test.traj[frame_ind],
+    cut_off,[this_ind],haystack_indices = test.water_inds)[0]
+        
+        while len(nbs)!=3:
+            if len(nbs) > 3:
+                pairs = [[this_ind,this_nb] for this_nb in nbs]
+                distances=md.compute_distances(traj[frame_ind],pairs)[0]
+                max_three = f(distances,3)
+                nbs = [nbs[ii] for ii in max_three]
+                
+            else:
+                print 'increase cut_off!'
+        
+        nbs.append(this_ind)
+        nbs.sort()
+        if nbs in nearest_nbs:
+            print "not unique"
+        else:
+            nearest_nbs.append(nbs)
+        
+    return np.array(nearest_nbs)
+        
+            
+            
 ##############################################################################
 # test
 ##############################################################################
@@ -224,11 +276,18 @@ q1 = q*np.array([1,1,1])
 phi = np.linspace(-np.pi,np.pi,10)
 qs = [[q1,q1]]
 
+test_ind= test.water_inds[0]
+# print test_ind
 frames = test.make_frame_inds(dt)
 tic = time.clock()
-test_corr(q,theta_1,frames,phi)
+cut_off = 0.5
+step = 0.001
+nbs = test_nearest_nbs(cut_off,1)
+# print nb_finder(cut_off,0,1)
 toc = time.clock()
 
+print nbs.shape
+print len(test.water_inds)
 print("Test Process time: %.2f" %(toc-tic))
 
 test.all_tthds.close()
