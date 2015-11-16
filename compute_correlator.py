@@ -33,8 +33,8 @@ import time
 # Code
 ##############################################################################
 
-frames = np.arange(101)[75:100]
-run_name = 'run4'
+frames = np.arange(101)[1:50]
+run_name = 'run1'
 
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
@@ -55,3 +55,4 @@ toc = time.clock()
 print("Correlator process time: %.2f" %(toc-tic))
 
 run.all_tthds.close()
+run.nearest_tthds.close()
