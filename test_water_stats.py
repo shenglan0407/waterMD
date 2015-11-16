@@ -36,10 +36,10 @@ import time
 
 # data_path='/Users/shenglanqiao/Documents/GitHub/waterMD/data'
 data_path = os.getcwd()+'/data'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+traj = md.load_trr(data_path+'/nvt-pr_run1.trr', top = data_path+'/water-sol_run1.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
-test = WaterStats(traj,'')
+test = WaterStats(traj,'run1',read_mod = 'r')
 
 R_water = 0.3
 
@@ -240,7 +240,7 @@ def test_nearest_nbs(cut_off,frame_ind):
         while len(nbs)!=3:
             if len(nbs) > 3:
                 pairs = [[this_ind,this_nb] for this_nb in nbs]
-                distances=md.compute_distances(traj[frame_ind],pairs)[0]
+                distances=md.compute_distances(test.traj[frame_ind],pairs)[0]
                 max_three = f(distances,3)
                 nbs = [nbs[ii] for ii in max_three]
                 
@@ -282,15 +282,18 @@ frames = test.make_frame_inds(dt)
 tic = time.clock()
 cut_off = 0.5
 step = 0.001
-nbs = test_nearest_nbs(cut_off,1)
+tthds = test.make_nearest_nb_tthds(cut_off,1)
+print len(tthds)
+print tthds[0]
 # print nb_finder(cut_off,0,1)
 toc = time.clock()
-
-print nbs.shape
-print len(test.water_inds)
+# 
+# print nbs.shape
+# print len(test.water_inds)
 print("Test Process time: %.2f" %(toc-tic))
 
 test.all_tthds.close()
+test.nearest_tthds.close()
 # f = open('C(psi).txt','a')
 # a = 1.049075
 # b=298689465
