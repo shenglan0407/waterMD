@@ -19,8 +19,8 @@ import sys
 # Code
 ##############################################################################
 
-run_name = 'run3'
-file_list = ['/corr_'+run_name+'.csv','/corr_'+run_name+'_1.csv','/corr_'+run_name+'_2.csv','/corr_'+run_name+'_3.csv']
+run_name = 'run1'
+file_list = ['/corr_'+run_name+'.csv','/corr_'+run_name+'_1.csv']
 
 data_list = []
 q1_list =[]
