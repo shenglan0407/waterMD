@@ -33,7 +33,7 @@ import time
 # Code
 ##############################################################################
 
-frames = np.arange(101)[1:50]
+frames = np.arange(101)[50:]
 run_name = 'run1'
 
 data_path = os.getcwd()+'/data'
