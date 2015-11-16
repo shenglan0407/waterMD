@@ -51,15 +51,25 @@ class WaterStats:
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
         tthds_path = os.getcwd()+'/output_data/all_tthds_'+run_name+'.hdf5'
-        if os.path.isfile(tthds_path) and read_mod == 'a':
-            input = raw_input('all_tthds database already exists. are you sure you want to append to it? [y or n]')
+        if os.path.isfile(tthds_path) and read_mod !='r':
+            input = raw_input('all_tthds database already exists. are you sure you want to append to/write it? [y or n]')
             if input =='y':
                 self.all_tthds = h5py.File(tthds_path,read_mod)
             else:
-                sys.exit()
+                self.all_tthds = h5py.File(tthds_path,'r')
         else:
             self.all_tthds = h5py.File(tthds_path,read_mod)
-
+        
+        # dictionary to store all nearest tthd vectors
+        nearest_tthds_path = tthds_path = os.getcwd()+'/output_data/nearest_tthds_'+run_name+'.hdf5'
+        if os.path.isfile(nearest_tthds_path) and read_mod !='r':
+            input = raw_input('nearest_tthds database already exists. are you sure you want to append to/write it? [y or n]')
+            if input =='y':
+                self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
+            else:
+                self.nearest_tthds = h5py.File(nearest_tthds_path,'r')
+        else:
+            self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
         
 
     def single_frame_N_QR(self,Q,R,pair_dist,time_dependent = False):
@@ -415,11 +425,46 @@ class WaterStats:
 #         return np.array(S_q),np.array(S_qerr),np.array(psi),phi
     
     
-    def save_tthds(self):
-        """
-        pickle self.all_tthds
-        """
-        pickle.dump(self.all_tthds,open('all_tthds.pkl','wb'),protocol = 2)
+    def find_nearest_nbs(self,cut_off,frame_ind,N_nbs):
+        '''Finds the N nearest neighbors of all waters in a single frame
+        '''
+        nearest_nbs = []
+        for this_ind in self.water_inds:
+            nbs = md.compute_neighbors(self.traj[frame_ind],
+        cut_off,[this_ind],haystack_indices = self.water_inds)[0]
+        
+            while len(nbs)!=3:
+                if len(nbs) > 3:
+                    pairs = [[this_ind,this_nb] for this_nb in nbs]
+                    distances=md.compute_distances(self.traj[frame_ind],pairs)[0]
+                    max_three = np.argsort(distances)[::-1][:N_nbs]
+                    nbs = [nbs[ii] for ii in max_three]
+                
+                else:
+                    print 'increase cut_off!'
+        
+            nbs.append(this_ind)
+            nbs.sort()
+            if nbs in nearest_nbs:
+                print "not unique"
+            else:
+                nearest_nbs.append(nbs)
+        
+        return np.array(nearest_nbs)
+    
+    def make_nearest_nb_tthds(self,cut_off,frame_ind):
+        nbs = self.find_nearest_nbs(cut_off,frame_ind,3)
+        
+        tthds = []
+        xyz_pos = self.traj[frame_ind].xyz
+        for this_nb in nbs:
+            # representing a tetrahedron with just two vectors, is this even right?
+            r_ij = xyz_pos[0,this_nb[0],:]- xyz_pos[0,this_nb[1],:]
+            r_kl = xyz_pos[0,this_nb[2],:]- xyz_pos[0,this_nb[3],:] # nm
+            
+            tthds.append([r_ij,r_kl])
+        return tthds 
+        
                 
 ##############################################################################
 # test
