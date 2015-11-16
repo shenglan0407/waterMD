@@ -285,20 +285,28 @@ class WaterStats:
     def compute_term_four_point(self,q_pair,tthd_pair):
         return (1+np.cos(np.dot(q_pair[0],tthd_pair[0])))*(1+np.cos(np.dot(q_pair[1],tthd_pair[1])))
     
-    def four_point_struct_factor(self,qs,cut_off,frame_ind):
+    def four_point_struct_factor(self,qs,cut_off,frame_ind,nearest_nb):
         """
         Sums all the fourier terms in one frame of simulation
         qs: np.array, pairts of (q1,q2)
         frame_ind: ind of a single frame
         """
-        if str(frame_ind) in self.all_tthds:
-            print "recycling for frame %d!" % frame_ind
-            this_tthds = self.all_tthds[str(frame_ind)]
+        if nearest_nb:
+            if str(frame_ind) in self.nearest_tthds:
+                print "recycling for frame %d!" % frame_ind
+                this_tthds = self.nearest_tthds[str(frame_ind)]
+            else:
+                this_tthds = ws.make_nearest_nb_tthds(cut_off,frame_ind)
+                self.nearest_tthds.create_dataset(str(frame_ind),data = this_tthds)
         else:
-            this_tthds = []
-            for this_water in self.water_inds:
-                this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
-            self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
+            if str(frame_ind) in self.all_tthds:
+                print "recycling for frame %d!" % frame_ind
+                this_tthds = self.all_tthds[str(frame_ind)]
+            else:
+                this_tthds = []
+                for this_water in self.water_inds:
+                    this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
+                self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
         
         corr_single_frame = []
         for this_q in qs:
@@ -342,7 +350,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,theta_1,frames,phi, cut_off = 0.5):
+    def correlator(self,q,theta_1,frames,phi,cut_off = 0.5,nearest_nb=True):
         """
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -383,7 +391,7 @@ class WaterStats:
 
         for this_frame in frames:
             print('computing for frame number %d...' % this_frame)
-            this_row = self.four_point_struct_factor(qs,cut_off,this_frame)
+            this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb)
             with open(output,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
