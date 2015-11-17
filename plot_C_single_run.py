@@ -24,7 +24,7 @@ import mdtraj as md
 # Code
 ##############################################################################
 
-run_name = 'run2'
+run_name = 'run3'
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
@@ -57,5 +57,5 @@ plt.errorbar(psi,Corr,yerr = C_err)
 plt.title('4-point correlator')
 plt.xlabel('psi')
 plt.ylabel('C')
-fig.savefig(os.getcwd()+'/output/Corr_'+run_name+'.png')
+fig.savefig(os.getcwd()+'/output/Corr_fine'+run_name+'.png')
 plt.close(fig)
