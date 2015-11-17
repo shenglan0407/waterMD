@@ -33,8 +33,8 @@ import time
 # Code
 ##############################################################################
 
-frames = np.arange(101)[50:]
-run_name = 'run1'
+frames = np.arange(201)[1:]
+run_name = 'run4'
 
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
