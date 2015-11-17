@@ -229,20 +229,23 @@ def test_nb_convergence(cut_off,step,max_iterations = 100):
             print this_ind
             print nbs
 def f(a,N):
-    return np.argsort(a)[::-1][:N]
+    return np.argsort(a)[:][:N]
            
 def test_nearest_nbs(cut_off,frame_ind):
     nearest_nbs = []
-    for this_ind in test.water_inds:
+    for this_ind in test.water_inds[0:2]:
         nbs = md.compute_neighbors(test.traj[frame_ind],
     cut_off,[this_ind],haystack_indices = test.water_inds)[0]
-        
+        print this_ind
         while len(nbs)!=3:
             if len(nbs) > 3:
                 pairs = [[this_ind,this_nb] for this_nb in nbs]
                 distances=md.compute_distances(test.traj[frame_ind],pairs)[0]
-                max_three = f(distances,3)
-                nbs = [nbs[ii] for ii in max_three]
+                print distances
+                min_three = f(distances,3)
+                print min_three
+                print nbs
+                nbs = [nbs[ii] for ii in min_three]
                 
             else:
                 print 'increase cut_off!'
@@ -282,9 +285,9 @@ frames = test.make_frame_inds(dt)
 tic = time.clock()
 cut_off = 0.5
 step = 0.001
-tthds = test.make_nearest_nb_tthds(cut_off,1)
-print len(tthds)
-print tthds[0]
+nbs = test_nearest_nbs(cut_off,1)
+print len(nbs)
+print nbs
 # print nb_finder(cut_off,0,1)
 toc = time.clock()
 # 
