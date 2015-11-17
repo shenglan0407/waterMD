@@ -24,7 +24,7 @@ import mdtraj as md
 # Code
 ##############################################################################
 
-run_name = 'run3'
+run_name = 'run2'
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
@@ -34,11 +34,12 @@ test.all_tthds.close()
 
 
 all_data = []
-with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'.csv','r') as f:
+with open(os.getcwd()+'/computed_results/corr_'+run_name+'.csv','r') as f:
         csvreader = csv.reader(f,delimiter=' ',quotechar='|')
         q1=(next(csvreader))
         q2=(next(csvreader))
         psi=(next(csvreader))
+        frames = (next(csvreader))
         
         for row in csvreader:
             all_data.append(row)
@@ -47,8 +48,8 @@ all_data = np.array(all_data,dtype=float)
 
 
 
-Corr = [np.mean(all_data[:,ii])/test.n_waters**2.0 for ii in range(len(psi))]
-C_err = [np.std(all_data[:,ii])/test.n_waters**2.0/np.sqrt(len(all_data[:,ii])) for ii in range(len(psi))]
+Corr = [np.mean(all_data[:,ii]) for ii in range(len(psi))]
+C_err = [np.std(all_data[:,ii])/np.sqrt(len(all_data[:,ii])) for ii in range(len(psi))]
 
 
 fig = plt.figure()
@@ -56,5 +57,5 @@ plt.errorbar(psi,Corr,yerr = C_err)
 plt.title('4-point correlator')
 plt.xlabel('psi')
 plt.ylabel('C')
-fig.savefig('Corr'+run_name+'.png')
+fig.savefig(os.getcwd()+'/output/Corr_'+run_name+'.png')
 plt.close(fig)
