@@ -445,8 +445,8 @@ class WaterStats:
                 if len(nbs) > 3:
                     pairs = [[this_ind,this_nb] for this_nb in nbs]
                     distances=md.compute_distances(self.traj[frame_ind],pairs)[0]
-                    max_three = np.argsort(distances)[::-1][:N_nbs]
-                    nbs = [nbs[ii] for ii in max_three]
+                    min_three = np.argsort(distances)[:][:N_nbs]
+                    nbs = [nbs[ii] for ii in min_three]
                 
                 else:
                     print 'increase cut_off!'
