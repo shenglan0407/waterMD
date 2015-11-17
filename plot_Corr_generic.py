@@ -31,17 +31,20 @@ print ('here is some info about the trajectory we are looking at:')
 print traj
 test = WaterStats(traj,run_name,read_mod='r')
 test.all_tthds.close()
+test.nearest_tthds.close()
 
-
+run_name = 'all'
 all_data = []
-with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'.csv','r') as f:
+with open(os.getcwd()+'/computed_results/combined_corr_all.csv','r') as f:
         csvreader = csv.reader(f,delimiter=' ',quotechar='|')
         q1=(next(csvreader))
         q2=(next(csvreader))
         psi=(next(csvreader))
-        
+        count = 0
         for row in csvreader:
-            all_data.append(row)
+            count += 1
+            if count%1==0:
+                all_data.append(row)
 
 all_data = np.array(all_data,dtype=float)
 
@@ -52,9 +55,9 @@ C_err = [np.std(all_data[:,ii])/np.sqrt(len(all_data[:,ii])) for ii in range(len
 
 
 fig = plt.figure()
-plt.errorbar(psi,Corr,yerr = C_err)
+plt.errorbar(psi,Corr,yerr = C_err,fmt='-.')
 plt.title('4-point correlator')
 plt.xlabel('psi')
 plt.ylabel('C')
-fig.savefig('Corr'+run_name+'.png')
+fig.savefig('Corr_fine_'+run_name+'_all.png')
 plt.close(fig)
