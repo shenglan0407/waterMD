@@ -33,8 +33,8 @@ import time
 # Code
 ##############################################################################
 
-frames = np.arange(101)[1:]
-run_name = 'run1'
+frames = np.arange(1001)[500:]
+run_name = 'run5'
 
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
@@ -44,7 +44,7 @@ run = WaterStats(traj,run_name,read_mod='r')
 
 q = 1/0.3*np.pi*2.0
 theta_1 = np.pi/12.
-phi = np.linspace(-np.pi,np.pi,50)
+phi = np.linspace(-np.pi/2.,np.pi/2.,25)
 dt = 1.0 # ps
 
 
