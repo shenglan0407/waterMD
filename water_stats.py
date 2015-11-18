@@ -350,7 +350,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,theta_1,frames,phi,cut_off = 0.5,nearest_nb=True,output = None):
+    def correlator(self,q,wavelength,frames,phi,cut_off = 0.5,nearest_nb=True,output = None):
         """
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -367,9 +367,9 @@ class WaterStats:
 
         print "frames used for averaging..."
         print frames
+        q_beam=2.0*np.pi/wavelenght
     
-    
-        q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+        q1 = np.array([q*np.sart(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
         q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi])
     
         qs = np.array([[q1,this_q2] for this_q2 in q2])
