@@ -46,7 +46,7 @@ def main(argv):
     
     
     try:
-        opts, args = getopt.getopt(argv,"hi:o:p:s:e",["ifile=","ofile=","n_phi=","fstart=","fend="])
+        opts, args = getopt.getopt(argv,"hi:o:p:s:e:",["ifile=","ofile=","n_phi=","fstart=","fend="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
