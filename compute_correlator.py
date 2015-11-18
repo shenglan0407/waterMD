@@ -33,35 +33,46 @@ import getopt
 ##############################################################################
 # Code
 ##############################################################################
+def usage():
+    print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi> -s <fstart> -e <fend>'
 
 def main(argv):
+    # default values for options
     run_name = None
     outputfile = None
     number_qs = 10
+    frame_start = 1
+    frame_end = None
+    
+    
     try:
-        opts, args = getopt.getopt(argv,"hi:o:p:",["ifile=","ofile=","n_phi="])
+        opts, args = getopt.getopt(argv,"hi:o:p:s:e",["ifile=","ofile=","n_phi=","fstart=","fend="])
     except getopt.GetoptError:
-        print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi>'
+        usage()
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
             
-            print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi>'
+            usage()
             sys.exit()
         elif opt in ("-i", "--ifile"):
             run_name = arg
         elif opt in ("-o", "--ofile"):
             outputfile = arg
         elif opt in ("-p","--n_phi"):
-            number_qs = arg
+            number_qs = int(arg)
+        elif opt in ("-s","--fstart"):
+            frame_start = int(arg)
+        elif opt in ("-e","--fend"):
+            frame_end = int(arg)
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
-    print 'Number of phi used is %s'%number_qs
+    print 'Number of phi used is %d'%number_qs
     
     if run_name == None:
         print '<runname> must be provided.'
-        print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi>'
+        usage()
         sys.exit(2)
         
     data_path = os.getcwd()+'/data'
@@ -69,7 +80,14 @@ def main(argv):
     print ('here is some info about the trajectory we are looking at:')
     print traj
     run = WaterStats(traj,run_name,read_mod='r')
-    frames = np.arange(1001)[500:]
+    if frame_start>=run.n_frames:
+        print 'Starting frame cannot be greater than the number of frames in simulation.'
+        usage()
+        sys.exit(2)
+    elif frame_end == None:
+        frames = np.arange(run.n_frames)[s:]
+    else:
+        frames = np.arange(run.n_frames)[frame_start:frame_end]
 
     q = 1/0.3*np.pi*2.0
     theta_1 = np.pi/12.
