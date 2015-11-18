@@ -85,18 +85,18 @@ def main(argv):
         usage()
         sys.exit(2)
     elif frame_end == None:
-        frames = np.arange(run.n_frames)[s:]
+        frames = np.arange(run.n_frames)[frame_start:]
     else:
         frames = np.arange(run.n_frames)[frame_start:frame_end]
 
     q = 1/0.3*np.pi*2.0
-    theta_1 = np.pi/12.
+    wavelegnth = 0.1
     phi = np.linspace(-np.pi/2.,np.pi/2.,number_qs)
     dt = 1.0 # ps
 
 
     tic = time.clock()
-    run.correlator(q,theta_1,frames,phi,cut_off = 0.5,output=outputfile)
+    run.correlator(q,wavelength,frames,phi,cut_off = 0.5,output=outputfile)
     toc = time.clock()
 
     print("Correlator process time: %.2f" %(toc-tic))
