@@ -54,10 +54,10 @@ Corr = [np.mean(all_data[:,ii]) for ii in range(len(psi))]
 C_err = [np.std(all_data[:,ii])/np.sqrt(len(all_data[:,ii])) for ii in range(len(psi))]
 
 print 'The average error is %.2f. ' % np.mean(C_err)
-# fig = plt.figure()
-# plt.errorbar(psi,Corr,yerr = C_err,fmt='-.')
-# plt.title('4-point correlator')
-# plt.xlabel('psi')
-# plt.ylabel('C')
-# fig.savefig(os.getcwd()+'/output/Corr_fine_'+run_name+'_everyother.png')
-# plt.close(fig)
+fig = plt.figure()
+plt.errorbar(psi,Corr,yerr = C_err,fmt='-.')
+plt.title('4-point correlator')
+plt.xlabel('psi')
+plt.ylabel('C')
+fig.savefig(os.getcwd()+'/output/Corr_fine_'+run_name+'_everyother.png')
+plt.close(fig)
