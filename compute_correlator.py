@@ -90,7 +90,7 @@ def main(argv):
         frames = np.arange(run.n_frames)[frame_start:frame_end]
 
     q = 1/0.3*np.pi*2.0
-    wavelegnth = 0.1
+    wavelength = 0.1
     phi = np.linspace(-np.pi/2.,np.pi/2.,number_qs)
     dt = 1.0 # ps
 

@@ -367,9 +367,9 @@ class WaterStats:
 
         print "frames used for averaging..."
         print frames
-        q_beam=2.0*np.pi/wavelenght
+        q_beam=2.0*np.pi/wavelength
     
-        q1 = np.array([q*np.sart(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
+        q1 = np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
         q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi])
     
         qs = np.array([[q1,this_q2] for this_q2 in q2])
