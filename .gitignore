@@ -8,3 +8,4 @@
 *.pkl
 *.out
 /output_data
+*.ipynb
