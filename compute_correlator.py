@@ -28,31 +28,83 @@ import numpy as np
 
 import os
 import time
-
+import sys
+import getopt
 ##############################################################################
 # Code
 ##############################################################################
+def usage():
+    print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi> -s <fstart> -e <fend>'
 
-frames = np.arange(1001)[500:]
-run_name = 'run5'
+def main(argv):
+    # default values for options
+    run_name = None
+    outputfile = None
+    number_qs = 10
+    frame_start = 1
+    frame_end = None
+    
+    
+    try:
+        opts, args = getopt.getopt(argv,"hi:o:p:s:e:",["ifile=","ofile=","n_phi=","fstart=","fend="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
 
-data_path = os.getcwd()+'/data'
-traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
-print ('here is some info about the trajectory we are looking at:')
-print traj
-run = WaterStats(traj,run_name,read_mod='r')
+    for opt, arg in opts:
+        if opt == '-h':
+            
+            usage()
+            sys.exit()
+        elif opt in ("-i", "--ifile"):
+            run_name = arg
+        elif opt in ("-o", "--ofile"):
+            outputfile = arg
+        elif opt in ("-p","--n_phi"):
+            number_qs = int(arg)
+        elif opt in ("-s","--fstart"):
+            frame_start = int(arg)
+        elif opt in ("-e","--fend"):
+            frame_end = int(arg)
+    print 'Input run is %s' % run_name
+    print 'Output file is %s'% outputfile
+    print 'Number of phi used is %d'%number_qs
+    
+    if run_name == None:
+        print '<runname> must be provided.'
+        usage()
+        sys.exit(2)
+        
+    data_path = os.getcwd()+'/data'
+    traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
+    print ('here is some info about the trajectory we are looking at:')
+    print traj
+    run = WaterStats(traj,run_name,read_mod='r')
+    if frame_start>=run.n_frames:
+        print 'Starting frame cannot be greater than the number of frames in simulation.'
+        usage()
+        sys.exit(2)
+    elif frame_end == None:
+        frames = np.arange(run.n_frames)[frame_start:]
+    else:
+        frames = np.arange(run.n_frames)[frame_start:frame_end]
 
-q = 1/0.3*np.pi*2.0
-theta_1 = np.pi/12.
-phi = np.linspace(-np.pi/2.,np.pi/2.,25)
-dt = 1.0 # ps
+    q = 1/0.3*np.pi*2.0
+    wavelength = 0.1
+    phi = np.linspace(-np.pi/2.,np.pi/2.,number_qs)
+    dt = 1.0 # ps
 
 
-tic = time.clock()
-run.correlator(q,theta_1,frames,phi,cut_off = 0.5)
-toc = time.clock()
+    tic = time.clock()
+    run.correlator(q,wavelength,frames,phi,cut_off = 0.5,output=outputfile)
+    toc = time.clock()
 
-print("Correlator process time: %.2f" %(toc-tic))
+    print("Correlator process time: %.2f" %(toc-tic))
 
-run.all_tthds.close()
-run.nearest_tthds.close()
+    run.all_tthds.close()
+    run.nearest_tthds.close()
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
+
+

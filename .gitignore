@@ -9,3 +9,4 @@
 *.out
 /output_data
 *.ipynb
+/data

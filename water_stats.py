@@ -350,7 +350,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,theta_1,frames,phi,cut_off = 0.5,nearest_nb=True):
+    def correlator(self,q,wavelength,frames,phi,cut_off = 0.5,nearest_nb=True,output = None):
         """
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -367,20 +367,22 @@ class WaterStats:
 
         print "frames used for averaging..."
         print frames
+        q_beam=2.0*np.pi/wavelength
     
-    
-        q1 = np.array([np.sin(2*theta_1),0,np.cos(2*theta_1)])*q
+        q1 = np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
         q2 = np.array([np.array([q1[0]*np.cos(this_phi),q1[0]*np.sin(this_phi),q1[2]]) for this_phi in phi])
     
         qs = np.array([[q1,this_q2] for this_q2 in q2])
-        
-        output = os.getcwd()+'/computed_results/corr_'+self.run_name+'.csv'
-        while os.path.isfile(output):
+        if output == None:
+            output_path = os.getcwd()+'/computed_results/corr_'+self.run_name+'.csv'
+        else:
+            output_path =  os.getcwd()+'/computed_results/'+output
+        while os.path.isfile(output_path):
             print 'Computed results exist, will not overwrite file'
-            input = raw_input('enter file indentifier here:')
-            output = os.getcwd()+'/computed_results/corr_'+self.run_name+'_'+input+'.csv'
-        
-        with open(output,'w') as csvfile:
+            input = raw_input('enter new file name here:')
+            output_path = os.getcwd()+'/computed_results/'+input
+            
+        with open(output_path,'w') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
             csvwriter.writerow(q1)
@@ -392,7 +394,7 @@ class WaterStats:
         for this_frame in frames:
             print('computing for frame number %d...' % this_frame)
             this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb)
-            with open(output,'a') as csvfile:
+            with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                 csvwriter.writerow(this_row)
