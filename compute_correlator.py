@@ -43,23 +43,25 @@ def main(argv):
     number_qs = 10
     frame_start = 1
     frame_end = None
+    q_inverse = 0.3
     
     
     try:
-        opts, args = getopt.getopt(argv,"hi:o:p:s:e:",["ifile=","ofile=","n_phi=","fstart=","fend="])
+        opts, args = getopt.getopt(argv,"hi:o:q:p:s:e:",["ifile=","ofile=","q_inv=","n_phi=","fstart=","fend="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            
             usage()
             sys.exit()
         elif opt in ("-i", "--ifile"):
             run_name = arg
         elif opt in ("-o", "--ofile"):
             outputfile = arg
+        elif opt in ("-q", "--q_inv"):
+            q_inverse = float(arg)
         elif opt in ("-p","--n_phi"):
             number_qs = int(arg)
         elif opt in ("-s","--fstart"):
@@ -69,6 +71,7 @@ def main(argv):
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
     print 'Number of phi used is %d'%number_qs
+    print 'Inverse of q is %.2f nm'%q_inverse
     
     if run_name == None:
         print '<runname> must be provided.'
@@ -89,7 +92,8 @@ def main(argv):
     else:
         frames = np.arange(run.n_frames)[frame_start:frame_end]
 
-    q = 1/0.3*np.pi*2.0
+    q = 1/q_inverse*np.pi*2.0
+    # wavelength of laser
     wavelength = 0.1
     phi = np.linspace(-np.pi/2.,np.pi/2.,number_qs)
     dt = 1.0 # ps
