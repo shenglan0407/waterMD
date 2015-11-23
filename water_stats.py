@@ -470,10 +470,40 @@ class WaterStats:
         
         tthds = []
         xyz_pos = self.traj[frame_ind].xyz
+        half_box = self.traj.unitcell_lengths[0][0]/2.
         for this_nb in nbs:
-            # representing a tetrahedron with just two vectors, is this even right?
-            r_ij = xyz_pos[0,this_nb[0],:]- xyz_pos[0,this_nb[1],:]
-            r_kl = xyz_pos[0,this_nb[2],:]- xyz_pos[0,this_nb[3],:] # nm
+            # correcting for periodic boundary condition
+            
+            r1 = xyz_pos[0,this_nb[0],:]
+            r2 = xyz_pos[0,this_nb[1],:]
+            r3 = xyz_pos[0,this_nb[2],:]
+            r4 = xyz_pos[0,this_nb[3],:]
+        
+            dr = r1-r2
+            for ii in range(3):
+                if np.abs(dr[ii]) > half_box:
+                    if r2[ii]<r1[ii]:
+                        r2[ii] = r2[ii]+half_box*2.
+                    else:
+                        r2[ii] = r2[ii]-half_box*2.
+        
+            dr = r1-r3
+            for ii in range(3):
+                if np.abs(dr[ii]) > half_box:
+                    if r3[ii]<r1[ii]:
+                        r3[ii] = r3[ii]+half_box*2.
+                    else:
+                        r3[ii] = r3[ii]-half_box*2.
+        
+            dr = r1-r4
+            for ii in range(3):
+                if np.abs(dr[ii]) > half_box:
+                    if r4[ii]<r1[ii]:
+                        r4[ii] = r4[ii]+half_box*2.
+                    else:
+                        r4[ii] = r4[ii]-half_box*2.
+            r_ij = r1-r2
+            r_kl = r3-r4 # nm
             
             tthds.append([r_ij,r_kl])
         return tthds 
