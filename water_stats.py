@@ -71,6 +71,8 @@ class WaterStats:
         else:
             self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
         
+        
+        
 
     def single_frame_N_QR(self,Q,R,pair_dist,time_dependent = False):
         """
@@ -314,7 +316,8 @@ class WaterStats:
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
                 this_sum += self.compute_term_four_point(this_q,tt)
-            corr_single_frame.append(this_sum)
+            n_tthds = self.nearest_tthds[str(frame_ind)].shape[0]
+            corr_single_frame.append(this_sum/n_tthds)
         
         return corr_single_frame
         
