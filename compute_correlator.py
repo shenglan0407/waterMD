@@ -95,7 +95,7 @@ def main(argv):
     q = 1/q_inverse*np.pi*2.0
     # wavelength of laser
     wavelength = 0.1
-    phi = np.linspace(-np.pi/2.,np.pi/2.,number_qs)
+    phi = np.linspace(0,np.pi,number_qs)
     dt = 1.0 # ps
 
 
