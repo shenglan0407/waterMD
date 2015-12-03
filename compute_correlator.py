@@ -34,7 +34,7 @@ import getopt
 # Code
 ##############################################################################
 def usage():
-    print 'compute_correlator.py -i <runname> -o <outputfile> -p <nphi> -s <fstart> -e <fend>'
+    print 'compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -s <fstart> -e <fend>'
 
 def main(argv):
     # default values for options
