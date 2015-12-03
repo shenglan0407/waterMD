@@ -32,7 +32,7 @@ import time
 # Code
 ##############################################################################
 
-run_name = 'run1'
+run_name = 'run5'
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
