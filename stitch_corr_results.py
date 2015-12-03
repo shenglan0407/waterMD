@@ -20,7 +20,7 @@ import sys
 ##############################################################################
 
 run_name = 'run5'
-file_list = ['/corr_'+run_name+'_0.34q_30p_1.csv','/corr_'+run_name+'_0.34q_30p_2.csv']
+file_list = ['corr_'+run_name+'_0.34q_symmetry.csv','corr_'+run_name+'_0.34q_symmetry_2.csv']
 
 data_list = []
 q1_list =[]
@@ -63,7 +63,7 @@ for ii in range(len(order)-1):
 
 all_data.extend(data_list[order[-1]])
 
-with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'_0.34q_30p_norm.csv','w') as f:
+with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'_0.34q_symmetry.csv','w') as f:
     csvwriter = csv.writer(f, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     csvwriter.writerow(q1_list[0])
