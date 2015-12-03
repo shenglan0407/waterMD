@@ -19,7 +19,7 @@ import sys
 # Code
 ##############################################################################
 
-run_name = 'run1'
+run_name = 'run5'
 file_list = ['/corr_'+run_name+'_0.34q_15p_1.csv','/corr_'+run_name+'_0.34q_15p_2.csv']
 
 data_list = []
