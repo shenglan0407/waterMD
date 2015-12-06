@@ -20,7 +20,7 @@ import sys
 ##############################################################################
 
 run_name = 'run5'
-file_list = ['corr_'+run_name+'_0.34q_symmetry.csv','corr_'+run_name+'_0.34q_symmetry_2.csv']
+file_list = ['corr_'+run_name+'_0.36q_30p_1.csv','corr_'+run_name+'_0.36q_30p_2.csv']
 
 data_list = []
 q1_list =[]
