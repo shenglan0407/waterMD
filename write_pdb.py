@@ -26,7 +26,7 @@ import time
 # Code
 ##############################################################################
 
-run_name = 'run1'
+run_name = 'run5'
 data_path = os.getcwd()+'/data'
 traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
@@ -37,13 +37,13 @@ frame_ind = 1
 
 half_box = ws.traj.unitcell_lengths[0][0]/2.*10
 
-inds = range(101)[1:]
-count = 0
+inds = range(1001)[101:]
+count = 33897
 for frame_ind in inds:
     nbs = ws.find_nearest_nbs(cut_off,frame_ind,3)
     xyz_pos = ws.traj[frame_ind].xyz
     
-    with open(os.getcwd()+'/output_data/tthd_pdb_100.pdb','a') as f:
+    with open(os.getcwd()+'/output_data/tthd_pdb_1000.pdb','a') as f:
         for this_nb in nbs:
             
             r1 = xyz_pos[0,this_nb[0],:]*10
@@ -90,4 +90,6 @@ for frame_ind in inds:
             f.write("%6s%5d %4s %3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f          %2s  \n" % ('HETATM', 4,'O','HOH','I',4,' '
             ,r4[0],r4[1],r4[2], 1.0, 0.0,'O'))
             f.write('%s \n' % 'ENDMDL')
+            
+            f.flush()
         
