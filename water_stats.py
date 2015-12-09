@@ -47,6 +47,7 @@ class WaterStats:
         self.total_time = self.time_step*self.n_frames # in ps
         self.run_name = run_name
         
+        
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
@@ -61,7 +62,7 @@ class WaterStats:
             self.all_tthds = h5py.File(tthds_path,read_mod)
         
         # dictionary to store all nearest tthd vectors
-        nearest_tthds_path = tthds_path = os.getcwd()+'/output_data/nearest_tthds_'+run_name+'.hdf5'
+        nearest_tthds_path =  os.getcwd()+'/output_data/nearest_tthds_'+run_name+'.hdf5'
         if os.path.isfile(nearest_tthds_path) and read_mod !='r':
             input = raw_input('nearest_tthds database already exists. are you sure you want to append to/write it? [y or n]')
             if input =='y':
@@ -70,6 +71,19 @@ class WaterStats:
                 self.nearest_tthds = h5py.File(nearest_tthds_path,'r')
         else:
             self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
+
+        # pdb file to store all nearest tthd coordinates
+        pdb_tthds_path = os.getcwd()+'/output_data/tthds_'+run_name+'.pdb'
+        if os.path.isfile(pdb_tthds_path) and read_mod !='r':
+            input = raw_input('pdb_tthds pdb file already exists. are you sure you want to append to/write it? [y or n]')
+            if input =='y':
+                self.pdb_tthds = open(pdb_tthds_path,'a')
+                self.tthd_counter = 0
+            else:
+                self.pdb_tthds = None
+        else:
+            self.pdb_tthds = open(pdb_tthds_path,'a')
+            self.tthd_counter = 0
         
         
         
@@ -506,6 +520,29 @@ class WaterStats:
             r_kl = r3-r4 # nm
             
             tthds.append([r_ij,r_kl])
+            
+            if self.pdb_tthds == None:
+                pass
+            else:
+                self.tthd_counter += 1
+                centeroid = (r1+r2+r3+r4)/4.
+                r1=r1-centeroid
+                r2=r2-centeroid
+                r3=r3-centeroid
+                r4=r4-centeroid
+                
+                self.pdb_tthds.write('%s        %d \n' % ('MODEL' , self.tthd_counter))
+                self.pdb_tthds.write("%6s%5d %4s %3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f          %2s  \n" % ('HETATM', 1,'O','HOH','I',1,' '
+                ,r1[0],r1[1],r1[2], 1.0, 0.0,'O'))
+                self.pdb_tthds.write("%6s%5d %4s %3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f          %2s  \n" % ('HETATM', 2,'O','HOH','I',2,' '
+                ,r2[0],r2[1],r2[2], 1.0, 0.0,'O'))
+                self.pdb_tthds.write("%6s%5d %4s %3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f          %2s  \n" % ('HETATM', 3,'O','HOH','I',3,' '
+                ,r3[0],r3[1],r3[2], 1.0, 0.0,'O'))
+                self.pdb_tthds.write("%6s%5d %4s %3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f          %2s  \n" % ('HETATM', 4,'O','HOH','I',4,' '
+                ,r4[0],r4[1],r4[2], 1.0, 0.0,'O'))
+                self.pdb_tthds.write('%s \n' % 'ENDMDL')
+            
+                self.pdb_tthds.flush()
         return tthds 
         
                 
