@@ -310,14 +310,14 @@ class WaterStats:
         if nearest_nb:
             if str(frame_ind) in self.nearest_tthds:
                 print "recycling for frame %d!" % frame_ind
-                this_tthds = self.nearest_tthds[str(frame_ind)]
+                this_tthds = self.nearest_tthds[str(frame_ind)][:][:]
             else:
                 this_tthds = ws.make_nearest_nb_tthds(cut_off,frame_ind)
                 self.nearest_tthds.create_dataset(str(frame_ind),data = this_tthds)
         else:
             if str(frame_ind) in self.all_tthds:
                 print "recycling for frame %d!" % frame_ind
-                this_tthds = self.all_tthds[str(frame_ind)]
+                this_tthds = self.all_tthds[str(frame_ind)][:][:]
             else:
                 this_tthds = []
                 for this_water in self.water_inds:
@@ -327,10 +327,11 @@ class WaterStats:
         corr_single_frame = []
         for this_q in qs:
             this_sum = 0
+            
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
                 this_sum += self.compute_term_four_point(this_q,tt)
-            n_tthds = this_tthds.shape[0]
+            n_tthds = len(this_tthds)
             corr_single_frame.append(this_sum/n_tthds)
         
         return corr_single_frame
