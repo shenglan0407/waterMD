@@ -81,14 +81,14 @@ If the simulation frames are probably sampled, this set of water tetrahedron is 
 {\it Look into the some statistics of the tetrahedrons (e.g. length of sides) and write about them here. }
 
 \subsection{Computing the correlator}
-The sampled tetrahedrons coordinates provide $r_{ij}$ and $r_{kl}$ in equation~\ref{eq:est_corr}. We then need to choose $\vec{q_1}$ and $\vec{q_2}$. Specifically, we can fix $\vec{q_1}$ and then define $\vec{q_2}(\abs{q_2},\phi)$, where $\phi$ is the angle between the two vectors on the detector plane. For autocorrelation, we the magnitude of both vectors is $\abs{q}$. For $\vec{q} = (q_1,q_2,q_3)$,
+The sampled tetrahedrons coordinates provide $r_{ij}$ and $r_{kl}$ in equation~\ref{eq:est_corr}. We then need to choose $\vec{q_1}$ and $\vec{q_2}$. Specifically, we can fix $\vec{q_1}$ and then define $\vec{q_2}(\abs{q_2},\phi)$, where $\phi$ is the angle between the two vectors on the detector plane. For autocorrelation, the magnitude of both vectors is $\abs{q}$. For $\vec{q} = (q_1,q_2,q_3)$,
 
-\begin{align*}
+\begin{align}
 q_1 &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \cos(\phi) \\
 q_2 &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \sin(\phi) \\
 q_3 &= -\frac{\abs{q}^2}{2q_{beam}} 
-\end{align*}
-
+\end{align}
+In the case of the autocorrelator, we will fix $\phi$ for $\vec{q_1}$ at zero and generate $\vec{q_2}(\phi)$ ($\phi \in [0 , \pi]$) . In the case of different magnitudes of $\vec{q_1}$ and $\vec{q_2}$, $\abs{q}$ in the equations above are replaced by $\abs{q_1}$ and $\abs{q_2}$.
 
 \end{document} 
 
