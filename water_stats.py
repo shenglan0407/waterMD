@@ -457,14 +457,16 @@ class WaterStats:
         '''Finds the N nearest neighbors of all waters in a single frame
         '''
         nearest_nbs = []
+        frame = self.traj[frame_ind]
+        
         for this_ind in self.water_inds:
-            nbs = md.compute_neighbors(self.traj[frame_ind],
+            nbs = md.compute_neighbors(frame,
         cut_off,[this_ind],haystack_indices = self.water_inds)[0]
         
-            while len(nbs)!=3:
-                if len(nbs) > 3:
+            while len(nbs)!= N_nbs:
+                if len(nbs) > N_nbs:
                     pairs = [[this_ind,this_nb] for this_nb in nbs]
-                    distances=md.compute_distances(self.traj[frame_ind],pairs)[0]
+                    distances=md.compute_distances(frame,pairs)[0]
                     min_three = np.argsort(distances)[:][:N_nbs]
                     nbs = [nbs[ii] for ii in min_three]
                 
@@ -477,7 +479,7 @@ class WaterStats:
                 print "not unique"
             else:
                 nearest_nbs.append(nbs)
-        
+                
         return np.array(nearest_nbs)
     
     def make_nearest_nb_tthds(self,cut_off,frame_ind):
