@@ -89,8 +89,12 @@ class WaterStats:
         self.total_time = self.time_step*self.n_frames # in ps
         self.run_name = run_name
         
-        
         self.rho = np.mean(self.n_waters/traj.unitcell_volumes) # in nm^-3
+        
+        if os.path.isdir(os.getcwd()+"/output_data"):
+            pass
+        else:
+            os.mkdir(os.getcwd()+"/output_data")
         
         # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
         tthds_path = os.getcwd()+'/output_data/all_tthds_'+run_name+'.hdf5'
