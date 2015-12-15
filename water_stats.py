@@ -462,7 +462,7 @@ class WaterStats:
         for this_ind in self.water_inds:
             nbs = md.compute_neighbors(frame,
         cut_off,[this_ind],haystack_indices = self.water_inds)[0]
-        
+            
             while len(nbs)!= N_nbs:
                 if len(nbs) > N_nbs:
                     pairs = [[this_ind,this_nb] for this_nb in nbs]
@@ -472,7 +472,7 @@ class WaterStats:
                 
                 else:
                     print 'increase cut_off!'
-        
+            nbs = [nbs[ii] for ii in range(len(nbs))]
             nbs.append(this_ind)
             nbs.sort()
             if nbs in nearest_nbs:
