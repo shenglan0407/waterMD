@@ -45,11 +45,11 @@ We want to compute, from the simulation data, the correlator between two pairs o
 \begin{equation} \label{eq:corr}
 C(\vec{q_1}, \vec{q_2}) = \int_{\omega} I(\vec{q_1},\omega) I(\vec{q_2},\omega) d\omega.
 \end{equation}
-Assuming our water box simulation is an good approximation of the statistical behavior of real water, we can estimate $C(\vec{q_1}, \vec{q_2})$ by summing over all possible 4-point ensemble in the simulations. Specifically,
+Assuming our water box simulation is an good approximation of the statistical behavior of real water, we can estimate $C(\vec{q_1}, \vec{q_2})$ by summing over all possible 4-point ensemble (tetrahedrons) in the simulations. Specifically,
 \begin{equation} \label{eq:est_corr}
-C(\vec{q_1}, \vec{q_2})  \propto \frac{ 4 \abs{f(q)}^4 }{M} \sum_{m=1}^{M} \sum^{N}_{i,j,k,l}  (1+\cos{\vec{q_1} \cdot \vec{r_{ij,m}}} ) (1+\cos{\vec{q_2} \cdot \vec{r_{kl,m}}} )
+C(\vec{q_1}, \vec{q_2})  = \frac{ 4 \abs{f(q)}^4 }{N_{tthd}} \sum_{m=1}^{M} \sum^{N}_{i,j,k,l}  (1+\cos{\vec{q_1} \cdot \vec{r_{ij,m}}} ) (1+\cos{\vec{q_2} \cdot \vec{r_{kl,m}}} )
 \end{equation}
-where $N$ is the total number of water molecules in the simulation, the index $m$ denotes the $m$-th frame in the simulation. We are averaging over $M$ statistically independent frames. The summation over indices $i$, $j$, $k$, and $l$ are over all unique 4-point ensembles.
+where $N_{tthd}$ id the total number of tetrahedrons in M simulations frames, $N$ is the total number of water molecules in the simulation, the index $m$ denotes the $m$-th frame in the simulation. We are averaging over $M$ statistically independent frames. The summation over indices $i$, $j$, $k$, and $l$ are over all unique 4-point ensembles.
 
 The dependence on $\omega$ is removed going from equation~\ref{eq:corr} to~\ref{eq:est_corr} as the MD simulation takes care of sampling over all possible orientation of tetrahedrons. The assumption here is that the water model used in the MD simulation is a reasonable and we have enough statistically independent frames from the MD trajectory. 
 
@@ -69,24 +69,30 @@ and the $a_i$'s and $b_i$'s are constants summarized in the table below.
 \end{center}
 
 \section{Method of computation}
-The computation is done in three steps: 1) MD simulation; 2) finding unique tetrahedrons formed by four water molecules; 3) computing C according to~\ref{eq:est_corr}.
+The computation is done in three steps: 1) MD simulation; 2) finding unique tetrahedrons formed by four water molecules; 3) computing C according to equation~\ref{eq:est_corr}.
 
 \subsection{MD simulation}
-We use Grimaces version 5.0.2 to run the MD simulations. We start with a single water molecule, define a cubic simulation box that is 2.2 nm on each side, and then use the build-in salvation function in Grimaces to fill the box with water molecules. The automatic salvation by Grimaces results in 339 water molecules in the box. We use an AMBER force field (amber99sb-ildn) and a TIP3P model for water molecules. Periodic boundary condition is also applied. Specific simulation parameters are saved in nvt-pr-md\_RUNNAME.mdp files in /home/shenglan/MD\_simulations/water\_box on zauber. Every 1 ps in simulation time, the coordinates of the water molecules are recorded. The trajectories ranges from 100 frames to 4000 frames.
+We use GROMACS version 5.0.2 to run the MD simulations. We start with a single water molecule, define a cubic simulation box that is 2.2 nm on each side, and then use the build-in solvation function in GROMACS to fill the box with water molecules. The automatic solvation results in 339 water molecules in the box. We use an AMBER force field (amber99sb-ildn) and a TIP3P model for water molecules. Periodic boundary condition is also applied. Specific simulation parameters are saved in nvt-pr-md\_RUNNAME.mdp files in /home/shenglan/MD\_simulations/water\_box on zauber. Every 1 ps in simulation time, the coordinates of the water molecules are recorded. The trajectories ranges from 100 frames to 10000 frames (100 ps to 10 nm simulation times).
 
 \subsection{Defining tetrahedrons}
-From the MD simulations, we can build a set water tetrahedrons. The position of a water molecule is defined only by the oxygen atom since the hydrogen atoms scatter x-ray much more weakly. In every simulation frame, we can find the three nearest neighbors for every water molecules and form one tetrahedron this way. Using only the nearest neighbors, which probably contribute most to C then neighbors further away, we can reduce the the number of tetrahedrons we need to sample and thus computation time. There are approximately as many unique\footnote{The combination of four water molecules that make up the vertices of the tetrahedron is unique. Some simulation frames yield fewer than 339 tetrahedrons because two molecules that are nearest neighbors of each other happen to share the two other nearest neighbors.} nearest-neighbor tetrahedrons as water molecules per simulation frame. For instance, 1000 statistically independent simulation frames generates about 330k tetrahedrons. 
+From the MD simulations, we can build a set water tetrahedrons. The position of a water molecule is defined only by the oxygen atom since the hydrogen atoms scatter x-ray much more weakly. In every simulation frame, we can find the three nearest neighbors for every water molecules and form one tetrahedron this way. Using only the nearest neighbors, which probably contribute most to C than neighbors further away, we can reduce the the number of tetrahedrons we need to sample and thus computation time. There are approximately as many unique\footnote{The combination of four water molecules that make up the vertices of the tetrahedron is unique. Some simulation frames yield fewer than 339 tetrahedrons because two molecules that are nearest neighbors of each other happen to share the two other nearest neighbors.} nearest-neighbor tetrahedrons as water molecules per simulation frame. For instance, 1000 statistically independent simulation frames generate about 330k tetrahedrons. 
 
-If the simulation frames are probably sampled, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for liquid water. Its underlying statistics therefore a good estimate of those of the true distribution. 
+If the simulation is true the actual physics of liquid water, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for water. Its underlying statistics are therefore a good estimate of those of the true distribution. One way  to check is to look at the radial distribution function, i.e. the distribution of distances between pairs of water molecules (oxygens); it has a well-known shpae. Figure~\ref{fig:rdf_mdtraj} shows the radial function produced by looking at as simulation of 1000 frames and 339 water molecules in $2.2\times2.2\times2.2$ nm box. The shape looks reasonable with a peak at about 0.3 nm. It will be interesting to compare radial distribution function produced by systems of different sizes since my understanding is that the periodic boundary condition has a larger effect on smaller systems.
+\begin{figure}[!h]\label{fig:rdf_mdtraj}
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj.png}
+     \caption{Radial distribution function of simulated water.}
+\end{figure}
+
 {\it Look into the some statistics of the tetrahedrons (e.g. length of sides) and write about them here. }
 
 \subsection{Computing the correlator}
-The sampled tetrahedrons coordinates provide $r_{ij}$ and $r_{kl}$ in equation~\ref{eq:est_corr}. We then need to choose $\vec{q_1}$ and $\vec{q_2}$. Specifically, we can fix $\vec{q_1}$ and then define $\vec{q_2}(\abs{q_2},\phi)$, where $\phi$ is the angle between the two vectors on the detector plane. For autocorrelation, the magnitude of both vectors is $\abs{q}$. For $\vec{q} = (q_1,q_2,q_3)$,
+The sampled tetrahedrons coordinates provide $r_{ij}$ and $r_{kl}$ in equation~\ref{eq:est_corr}. We then need to choose $\vec{q_1}$ and $\vec{q_2}$. Specifically, we can fix $\vec{q_1}$ and then define $\vec{q_2}(\abs{q_2},\phi)$, where $\phi$ is the angle between the two vectors on the detector plane. For autocorrelation, the magnitude of both vectors is $\abs{q}$. For $\vec{q} = (q_x,q_y,q_z)$,
 
 \begin{align}
-q_1 &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \cos(\phi) \\
-q_2 &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \sin(\phi) \\
-q_3 &= -\frac{\abs{q}^2}{2q_{beam}} 
+q_x &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \cos(\phi) \\
+q_y &= \abs{q}\sqrt{1-(\frac{\abs{q}}{2q_{beam}})^2} \sin(\phi) \\
+q_z &= -\frac{\abs{q}^2}{2q_{beam}} 
 \end{align}
 In the case of the autocorrelator, we will fix $\phi$ for $\vec{q_1}$ at zero and generate $\vec{q_2}(\phi)$ ($\phi \in [0 , \pi]$) . In the case of different magnitudes of $\vec{q_1}$ and $\vec{q_2}$, $\abs{q}$ in the equations above are replaced by $\abs{q_1}$ and $\abs{q_2}$.
 
