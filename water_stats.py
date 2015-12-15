@@ -39,11 +39,53 @@ import time
 
 class WaterStats:
     def __init__(self,traj,run_name,read_mod='a'):
+        """WaterStats object gives access to functions that compute statistical properties
+        of water. 
+        
+        Parameters
+        ----------
+        traj : mdtraj.Trajetory object
+            MD simulation trajectory of water
+        run_name : str
+            unique identifier of simulation run
+        read_mod : {'a','r','w'}
+            mode for opening relevant files. Default is 'a' for append
+        
+        Attributes
+        ----------
+        traj : mdtraj.Trajetory object
+            MD simulation trajectory of water
+        n_waters : int
+            number of water molecules in simulation
+        water_inds : list
+            atom indices of oxygens of water molecules
+        time_step : float
+            time between simulation frames in ps
+        n_frames : int
+            total number of simulation frames
+        total_time : flost
+            total run time of simulation 
+        run_name : str
+            unique identifier of simulation run, used in naming convention of output files
+        rho : float
+            number density of water molecules
+        nearest_tthds : h5py dataset (dict)
+            database to store tetrahedrons made with only the nearest three neighbors of 
+            water molecules. They are represented by two vectors r_ij (r_i-r_j) and r_kl
+            (r_k-r_l) where i, j, k, l are the indices of the four waters.
+        all_tthds : h5py dataset (dict)
+            database to store all tetrahedrons formed by water molecules in simulation.
+        pdb_tthds : csv file
+            records coordinates of the four vertices of all nearest-neighbor tetrahedrons 
+            in pdb format
+        tthd_counter : int
+            keeps count of the total number of nearest tetrahedrons
+        """
         self.traj = traj
         self.n_waters = traj.topology.n_residues
         self.water_inds = traj.topology.select_atom_indices(selection='water')
         self.time_step=traj.timestep # in ps
-        self.n_frames = self.traj.n_frames
+        self.n_frames = traj.n_frames
         self.total_time = self.time_step*self.n_frames # in ps
         self.run_name = run_name
         
