@@ -3,7 +3,7 @@
 #
 # Author: Shenglan Qiao
 # 
-# Functions for plotting computed results for 4-point correlator
+# Functions for plotting, handling, and analyzing computed results for 4-point correlator
 #
 #
 #############################################################################
@@ -67,6 +67,10 @@ def load_data(path,stride,partial=None,with_frame=False,debug = False):
                             ,dtype=float)
     phi = np.array(phi,dtype = float)/np.pi*180
     q_mag = np.linalg.norm(np.array(q1,dtype=float))
+    
+    q1,new_q2 = load_q1_q2(path)
+    
+    cos_psi = [np.dot(q1,this_q2)/(q_mag*np.linalg.norm(np.array(this_q2,dtype=float))) for this_q2 in new_q2]
 
     Corr = [np.mean(all_data[:,ii]) for ii in range(len(phi))]
     C_err = [np.std(np.array(all_data[:,ii])) \
@@ -76,9 +80,9 @@ def load_data(path,stride,partial=None,with_frame=False,debug = False):
     print 'The average error is %.2g. ' % np.mean(C_err)
     
     if debug:
-        return Corr,C_err,phi,all_data,q_mag
+        return Corr,C_err,phi,cos_psi,all_data,q_mag
     else:
-        return Corr,C_err,phi
+        return Corr,C_err,phi,cos_psi
 
 def load_q1_q2(path):
     """returns the q1 and the list of q2s used for computed correlator
@@ -102,3 +106,52 @@ def load_q1_q2(path):
                 pass
         new_q2.append(q2_float)
     return np.array(q1,dtype=float),new_q2
+    
+def check_convergence(path,increment):
+    """produce correlator average over increasing number of tthds. 
+    return a list of differences between consecutive correlator curves as more tthds from 
+    more simulation are added to the overall average. Also return the magnitude of qs
+    for which the convergence test is done (assuming autocorrelator at this point)
+    
+    Parameters
+    ----------
+    path : str
+        path to the csv file
+    increment : int
+        number of frames to increase by when computing the next correlator curve
+    """
+    
+    _,_,phi,_,all_data,q_mag =load_data(path
+                        ,1
+                        ,debug = True
+                        )
+    increment = 1
+    partials = [[0,(i+1)*increment] for i in range(len(all_data)/increment)]
+    accu_corr = []
+    for this_partial in partials:
+        data = all_data[this_partial[0]:this_partial[1]]
+        Corr = [np.mean(data[:,ii]) for ii in range(len(phi))]
+        accu_corr.append(Corr)
+    
+    diffs = []
+    for ii in range(len(accu_corr)-1):
+        diff = np.sqrt(np.linalg.norm(np.array(accu_corr[ii])\
+                       -np.array(accu_corr[ii+1])))/len(all_data[0])
+        diffs.append(diff)
+    return diffs, q_mag
+
+def make_file_paths(q_invs,run_name):
+    """returns a list of file names that are consistent with correlator naming conventions
+    
+    Parameters
+    ----------
+    q_invs : list of str
+        list of q_invs in nm for which correlator has been computed
+    run_name : str
+        name of the simulation run by naming convention
+    """
+    file_paths = [os.getcwd()+\
+                        '/computed_results/combined_corr_'+run_name+'_'\
+                                    +this_q+'q_30p.csv'\
+             for this_q in q_invs]
+    return file_paths
