@@ -14,13 +14,10 @@
 ##############################################################################
 
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import csv
 import numpy as np
 import os
 import h5py
-import mdtraj as md
-from water_stats import WaterStats
 
 from pylab import *
 import numpy as np
@@ -110,7 +107,7 @@ def load_q1_q2(path):
 def check_convergence(path,increment):
     """produce correlator average over increasing number of tthds. 
     return a list of differences between consecutive correlator curves as more tthds from 
-    more simulation are added to the overall average. Also return the magnitude of qs
+    more simulation frames are added to the overall average. Also return the magnitude of qs
     for which the convergence test is done (assuming autocorrelator at this point)
     
     Parameters
@@ -119,6 +116,13 @@ def check_convergence(path,increment):
         path to the csv file
     increment : int
         number of frames to increase by when computing the next correlator curve
+        
+    Returns
+    -------
+    diffs : list
+        difference in consecutive correlator curves averaged over increasing number of simulation frames
+    q_mag : float
+        magnitude of q's for which the convergence test is done (assuming auto-correlation for now) 
     """
     
     _,_,phi,_,all_data,q_mag =load_data(path
@@ -149,9 +153,54 @@ def make_file_paths(q_invs,run_name):
         list of q_invs in nm for which correlator has been computed
     run_name : str
         name of the simulation run by naming convention
+
+    Returns
+    -------
+    file_path: list
+        list of str, paths to computed data files
     """
     file_paths = [os.getcwd()+\
                         '/computed_results/combined_corr_'+run_name+'_'\
                                     +this_q+'q_30p.csv'\
              for this_q in q_invs]
     return file_paths
+
+def make_polar_plot_coordinates(file_paths,q_s,align = True):
+    """Return the polar coordinates needed to make a polar plot of correlator
+    
+    Parameters
+    ----------
+    file_paths : list of str
+        list of paths to file whose data we want to combine to make a polar plot
+    q_s : list of float
+        values of used for computing all the correlators. must be in the same order
+        as paths in file_path
+
+    Returns
+    -------
+    phi_rad : list of float
+        angles in the polar plot where there is data, radian
+    data : array-like
+        data points to be plotted on the polar plot. shape is len(file_paths) by len(phi_rad) 
+
+    """
+    all_corr = []
+    for this_file in file_paths:
+        Corr,_,phi,cos_psi =load_data(this_file
+                        ,1
+                        )
+        if align:
+            all_corr.append(Corr-min(Corr))
+        else:
+            all_corr.append(Corr)
+    all_corr = np.array(all_corr)
+    
+    phi_rad = [this_phi/360*2*np.pi for this_phi in phi]
+    points = [[q_s[i],phi_rad[j]] for i in range(len(q_s)) for j in range(len(phi))] 
+    
+    # create grid values and interpolate
+    grid_r, grid_phi = np.meshgrid(q_s, phi_rad)
+    data = griddata(points, all_corr.ravel(), (grid_r, grid_phi), method='cubic',fill_value=0)
+    data = data.T
+    
+    return phi_rad, data
