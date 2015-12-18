@@ -111,7 +111,7 @@ def main(argv):
     else:
         frames = np.arange(run.n_frames)[frame_start:frame_end]
     
-    print("frames %d to %d are used for averaging." % (frame[0], frames[-1]))
+    print("frames %d to %d are used for averaging." % (frames[0], frames[-1]))
     
     # wavelength of laser
     wavelength = 0.1
@@ -123,7 +123,8 @@ def main(argv):
         
         if outputfile == None:
             outputfile = 'corr_'+run_name+\
-            '_'+str(q_inverse)+'q_'+str(number_qs)+'p'+\
+            '_'+str(q_inverse)+'q_'+str(number_qs)+'p_'+\
+            str(frames[0])+\
             '.csv'
 
         tic = time.clock()
