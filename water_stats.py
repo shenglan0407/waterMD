@@ -469,8 +469,8 @@ class WaterStats:
             File name to save the results in, default None.
         """
  
-        print "frames used for averaging..."
-        print frames
+        # print "frames used for averaging..."
+#         print frames
         
         q_beam=2.0*np.pi/wavelength
         

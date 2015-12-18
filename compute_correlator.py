@@ -111,11 +111,14 @@ def main(argv):
     else:
         frames = np.arange(run.n_frames)[frame_start:frame_end]
     
+    print("frames %d to %d are used for averaging." % (frame[0], frames[-1]))
+    
     # wavelength of laser
     wavelength = 0.1
     phi = np.linspace(0,np.pi,number_qs)
     dt = 1.0 # ps
     for q_inverse in q_range:
+        print('computing for q_invers = %.3g nm' % q_inverse)
         q = 1/q_inverse*np.pi*2.0
         
         if outputfile == None:
