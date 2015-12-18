@@ -24,7 +24,7 @@ qs = [0.23,0.292,0.306,0.322,0.34,0.36,0.38,0.405,0.433,0.465]
 frame_starts = [1000]
 for this_q in qs:
     file_list = ['corr_'+run_name+'_'+str(this_q)+'q_30p.csv']
-    for this_statr in frame_starts:
+    for this_start in frame_starts:
         file_list.append('corr_'+run_name+'_'+str(this_q)+'q_30p_'+str(this_start)+'.csv')
 #     file_list = ['q0.465_formfactor_1.csv','q0.465_formfactor_2.csv']
     data_list = []
