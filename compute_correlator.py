@@ -43,7 +43,8 @@ def main(argv):
     number_qs = 10
     frame_start = 1
     frame_end = None
-    q_inverse = 0.3
+#     q_inverse = 0.3
+    q_range = [0.3]
     
     
     try:
@@ -61,7 +62,22 @@ def main(argv):
         elif opt in ("-o", "--ofile"):
             outputfile = arg
         elif opt in ("-q", "--q_inv"):
-            q_inverse = float(arg)
+            print arg
+            qs = arg.split('/')
+            print qs
+            if len(qs) > 1:
+                try:
+                    q_range = [float(this_q) for this_q in qs]
+                except ValueError:
+                    print 'Enter a single value of q of a range of values separated by /'
+                    sys.exit(2)
+            else:
+                try:
+                    q_range = [float(arg)]
+                except ValueError:
+                    print 'Enter a single value of q of a range of values separated by space'
+                    sys.exit(2)
+                
         elif opt in ("-p","--n_phi"):
             number_qs = int(arg)
         elif opt in ("-s","--fstart"):
@@ -71,7 +87,9 @@ def main(argv):
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
     print 'Number of phi used is %d'%number_qs
-    print 'Inverse of q is %.2f nm'%q_inverse
+#     print 'Inverse of q is %.2f nm'%q_inverse
+    print 'Computing correlators for the following q_inverse values in nm:'
+    print q_range
     
     if run_name == None:
         print '<runname> must be provided.'
@@ -92,19 +110,25 @@ def main(argv):
         frames = np.arange(run.n_frames)[frame_start:]
     else:
         frames = np.arange(run.n_frames)[frame_start:frame_end]
-
-    q = 1/q_inverse*np.pi*2.0
+    
     # wavelength of laser
     wavelength = 0.1
     phi = np.linspace(0,np.pi,number_qs)
     dt = 1.0 # ps
+    for q_inverse in q_range:
+        q = 1/q_inverse*np.pi*2.0
+        
+        if outputfile == None:
+            outputfile = 'corr_'+run_name+\
+            '_'+str(q_inverse)+'q_'+str(number_qs)+'p'+\
+            '.csv'
 
+        tic = time.clock()
+        run.correlator(q,wavelength,frames,phi,cut_off = 0.5,output=outputfile)
+        toc = time.clock()
 
-    tic = time.clock()
-    run.correlator(q,wavelength,frames,phi,cut_off = 0.5,output=outputfile)
-    toc = time.clock()
-
-    print("Correlator process time: %.2f" %(toc-tic))
+        print("Correlator process time for %.3g nm: %.2f" % (q_inverse,(toc-tic)))
+        outputfile = None
 
     run.all_tthds.close()
     run.nearest_tthds.close()
