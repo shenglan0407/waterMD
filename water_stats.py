@@ -376,14 +376,14 @@ class WaterStats:
         """
         if nearest_nb:
             if str(frame_ind) in self.nearest_tthds:
-                print "recycling for frame %d!" % frame_ind
+#                 print "recycling for frame %d!" % frame_ind
                 this_tthds = self.nearest_tthds[str(frame_ind)][:][:]
             else:
                 this_tthds = ws.make_nearest_nb_tthds(cut_off,frame_ind)
                 self.nearest_tthds.create_dataset(str(frame_ind),data = this_tthds)
         else:
             if str(frame_ind) in self.all_tthds:
-                print "recycling for frame %d!" % frame_ind
+#                 print "recycling for frame %d!" % frame_ind
                 this_tthds = self.all_tthds[str(frame_ind)][:][:]
             else:
                 this_tthds = []
@@ -392,14 +392,25 @@ class WaterStats:
                 self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
         
         corr_single_frame = []
+        aa = [3.0485,2.2868,1.5463,0.867]
+        bb = [13.2771,5.7011,0.3239,32.9089]
+        cc = 0.2580
+        form_factor = cc
+        for this_a,this_b in zip(aa,bb):
+            form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
+        
         for this_q in qs:
             this_sum = 0
             
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
                 this_sum += self.compute_term_four_point(this_q,tt)
+            
             n_tthds = len(this_tthds)
-            corr_single_frame.append(this_sum/n_tthds)
+            
+            
+            
+            corr_single_frame.append(this_sum/n_tthds*form_factor**4.0*4.0)
         
         return corr_single_frame
         
@@ -488,7 +499,7 @@ class WaterStats:
         csvfile.close()
 
         for this_frame in frames:
-            print('computing for frame number %d...' % this_frame)
+#             print('computing for frame number %d...' % this_frame)
             this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
