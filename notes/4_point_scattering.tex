@@ -11,26 +11,7 @@
 \fancyhead[LE,RO]{Notes on 4-point correlator}
 \fancyhead[RE,LO]{Autumn 2015}
 \begin{document}
-\section{Sanity check}
-The static structure factor is the Fourier transform of the radial distribution function $g_2(r)$.
-\begin{equation} \label{eq:ft_g}
-S(\vec{q}) = 1+ \rho \int_V d\vec{r} e^{-i \vec{q} \cdot \vec{r}} g_2(r)
-\end{equation} 
-$r$ is the distance between two water molecules and $\vec{r}$ is the vector connecting them. To compute the integral directly from MD simulation of water, I have to do the following modifications: for each frame $k$ from the simulation, find all unique combination of pairs of molecules within distance $R$ and sum up their contributions to the Fourier transform. $R$ has to be chosen since the size of the simulation box is finite. Hence an estimate of $S(\vec{q})$ from on simulation frame is:
-\begin{equation} \label{eq:ft_sum}
-S(\vec{q})\approx\frac{1}{N} \sum_{i,j, =1}^{N}  e^{-i \vec{q} \cdot (\vec{r_i}-\vec{r_j})}  \Delta_{ij}
-\end{equation}
-where $\Delta_{ij} = 1$ if $\abs{\vec{r_i}-\vec{r_j}} \leq R$ and is 0 otherwise.
-
-Since liquid water is isotopic, intuition tells us that the pointing $(\vec{r_i}-\vec{r_j})$ shouldn't matter and only its length should. Debye's formula formalizes this and the above summation is equivalent to:
-\begin{equation} \label{eq:debye_sum}
-S(Q)\approx\frac{1}{N} \sum_{i,j, =1}^{N}  \frac{\sin(Qr_{ij})}{Qr_{ij}}  \Delta_{ij}
-\end{equation}
-where $r_{ij}= \vec{r_i}-\vec{r_j}$ and $Q$ is the magnitude of $\vec{q}$.
-
-Averaging over many independent simulation frames gives an estimate from the simulation of $S(Q)$. There is also a finite-size effect introduced by the simulation box. See the two Salcuse papers in the notes for details. The finite-size effect is implemented in the code. 
-
-I have done some checking to make sure that the explicit Fourier transform makes sense with my simulation data. So far I have checked that it produces a small imaginary part, and also seems to be only dependent on the magnitude of $\vec{q}$ but not its pointing. Also, equations~\ref{eq:ft_sum} and~\ref{eq:debye_sum} give the same answer when I use them to compute $S(Q)$ from averaging over independent frames from the simulations. This makes me think that I have been doing the explicit Fourier transform correctly for the radial distribution.
+We want to investigate how the presence of water affect the correlator computed from x-ray scattering data. We believe that correlating scattering events from pairs of water molecules may be responsible for the u-shape background we see in the DNA data. Here I present an attempt to compute such correlator by simulating water with molecular dynamics (MD) simulations.
 
 \section{Direct calculation of the correlator from simulation}
 The intensity from scattering from a pair of water molecules is:
@@ -77,11 +58,11 @@ We use GROMACS version 5.0.2 to run the MD simulations. We start with a single w
 \subsection{Defining tetrahedrons}
 From the MD simulations, we can build a set water tetrahedrons. The position of a water molecule is defined only by the oxygen atom since the hydrogen atoms scatter x-ray much more weakly. In every simulation frame, we can find the three nearest neighbors for every water molecules and form one tetrahedron this way. Using only the nearest neighbors, which probably contribute most to C than neighbors further away, we can reduce the the number of tetrahedrons we need to sample and thus computation time. There are approximately as many unique\footnote{The combination of four water molecules that make up the vertices of the tetrahedron is unique. Some simulation frames yield fewer than 339 tetrahedrons because two molecules that are nearest neighbors of each other happen to share the two other nearest neighbors.} nearest-neighbor tetrahedrons as water molecules per simulation frame. For instance, 1000 statistically independent simulation frames generate about 330k tetrahedrons. 
 
-If the simulation is true the actual physics of liquid water, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for water. Its underlying statistics are therefore a good estimate of those of the true distribution. One way  to check is to look at the radial distribution function, i.e. the distribution of distances between pairs of water molecules (oxygens); it has a well-known shpae. Figure~\ref{fig:rdf_mdtraj} shows the radial function produced by looking at as simulation of 1000 frames and 339 water molecules in $2.2\times2.2\times2.2$ nm box. The shape looks reasonable with a peak at about 0.3 nm. It will be interesting to compare radial distribution function produced by systems of different sizes since my understanding is that the periodic boundary condition has a larger effect on smaller systems.
-\begin{figure}[!h]\label{fig:rdf_mdtraj}
+If the simulation is true the actual physics of liquid water, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for water. Its underlying statistics are therefore a good estimate of those of the true distribution. One way  to check is to look at the radial distribution function, i.e. the distribution of distances between pairs of water molecules (oxygens); it has a well-known shape. Figure~\ref{fig:rdf_mdtraj} shows the radial function produced by looking at as simulation of 10000 frames and 339 water molecules in $2.2\times2.2\times2.2$ nm box. The shape looks reasonable with a peak at about 0.3 nm. It will be interesting to compare radial distribution function produced by systems of different sizes since my understanding is that the periodic boundary condition has a larger effect on smaller systems.
+\begin{figure}[!h] 
   \centering
-    \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj.png}
-     \caption{Radial distribution function of simulated water.}
+    \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj_run8.png}
+     \caption{Radial distribution function of simulated water.} \label{fig:rdf_mdtraj}
 \end{figure}
 
 {\it Look into the some statistics of the tetrahedrons (e.g. length of sides) and write about them here. }
@@ -96,8 +77,62 @@ q_z &= -\frac{\abs{q}^2}{2q_{beam}}
 \end{align}
 In the case of the autocorrelator, we will fix $\phi$ for $\vec{q_1}$ at zero and generate $\vec{q_2}(\phi)$ ($\phi \in [0 , \pi]$) . In the case of different magnitudes of $\vec{q_1}$ and $\vec{q_2}$, $\abs{q}$ in the equations above are replaced by $\abs{q_1}$ and $\abs{q_2}$.
 
+I personally find it more intuitive to think about the inverse of $\abs{q}$, i.e. the length scale we are probing with the x-ray scattering. As a test, I computed the autocorrelators for the following lengths in nm: 0.23, 0.292, 0.306, 0.322, 0.34, 0.36, 0.38, 0.405, 0.433, 0.465. In terms of $\AA^{-1}$, the magnitude of the q-vectors are 2.73, 2.15,  2.05, 1.95, 1.85, 1.75, 1.65, 1.55, 1.45, 1.35.
+
+\section{Results and open questions}
+Figures~\ref{fig:autocorr_aligned} and~\ref{fig:autocorr} summarizes the results for computing autocorrelations for the range of $\abs{q}$ listed in the previous section. Figures~\ref{fig:autocorr_aligned} shows autocorrelators as a function of $\cos{\psi}$, where $\psi$ is the angle between $\vec{q_1}$ and $\vec{q_2}$. The minimums of the curves are aligned to show their shapes better. At smaller $\abs{q}$, the autocorrelator is clearly u-shape and symmetric about $\cos{\psi} = 0$. At larger $\abs{q}$, two peaks appear and some asymmetry becomes more prominent. The peaks can be intuitively understood as more atomic details at shorter length scales as we examine the autocorrelator increasing $\abs{q}$. I attribute the asymmetry, which should not appear if the tetrahedrons are properly construct, to some kind of under or biased sampling of the water molecule configurations. 
+
+\begin{figure}[!h] 
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/autocorr_cos_psi_aligned.jpg}
+     \caption{Autocorrelator for various magnitudes for $\vec{q}$. The curves in the plot on the left are aligned by their minimums in order to show the change in their shape as a function of $q$. The plot on the right is the polar version of the same information.} \label{fig:autocorr_aligned}
+\end{figure}
+
+Figures~\ref{fig:autocorr} shows the relative magnitude of the autocorrelator at different $\abs{q}$.The autocorrlators are lrger in magnitude when $\abs{q}$ is smaller.
+
+\begin{figure}[!h]
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/autocorr_cos_psi.jpg}
+     \caption{Similarly to figure~\ref{fig:autocorr_aligned}, autocorrelator for various magnitudes for $\vec{q}$. The minimums of the curves are not aligned by their minimums in order to show the relative magnitude of the autocorrelator as a function of $q$.} \label{fig:autocorr}
+\end{figure}
+
+Some aspects of the computation are still not well-understood by me. The sampling of tetrahedron is done by modeling the water with MD simulations. Does this sampling truly represent configurations of water molecules? One indirect test is to see if the autocorrelator as a function of $\cos{\psi}$ for a given $\abs{q}$ converges as more water molecule configurations are sampled by the simulations. Figure~\ref{fig:autocorr_converge} tries to visualize the converge: for each $\abs{q}$, the autocorrelator is computed with increasing number of simulations frames until data from all 10000 frames are used. The difference between consecutive curves are then calculated for each $\abs{q}$ and plotted as a function of number of simulation frames used. This plot suggests that as more water molecule configurations are sampled, the differences between consecutive curves tends to zero, i.e. the autoccorrelator tends to stabilize to a particular functional form.
+
+\begin{figure}[!h]
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/run8_converg_check.jpg}
+     \caption{The differences between consecutive autocorrelators tend to zero as more simulation data are used to compute them.} \label{fig:autocorr_converge}
+\end{figure}
+
+My suspicion is that this convergence is not achieved at the same rate for different $\abs{q}$'s; at large $\abs{q}$'s, the autocorrelator looks less symmetric as compared to that at smaller $\abs{q}$'s (figure~\ref{fig:autocorr_compare}). My intuition is that this can probably be explained by the the radial distribution function (figure~\ref{fig:rdf_mdtraj}) drops off rapidly to zero at about $r<0.3$ nm. Probing at length scales than ~0.3 nm ($\abs{q}>2.1 \AA^{-1}$) will require more simulation frames to reach convergence.
+
+\begin{figure}[!h]
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/autocorr_compare.jpg}
+     \caption{Comparing the shapes of the autocorrelator curves at different $\abs{q}$'s} \label{fig:autocorr_compare}
+\end{figure}
+
+There are more explorations that might be worthwhile to explore. First, I should establish a better understanding of the statistics of the geometric properties of the 3 million water tetrahedrons I have obtained from MD simulations so far; I should also try to figure out what the statistics should be for real water. Also, I want to further explore the effect of simulation box size on the distribution of tetrahedrons and on the computed correlator. I want to try Derek's code (thor) and compare its results to correlators computed from MD simulations. Moving on from here, I should also explore how this simulation can help understanding the DNA data.
+
 \end{document} 
 
-\begin{equation}
-
+\section{Sanity check}
+The static structure factor is the Fourier transform of the radial distribution function $g_2(r)$.
+\begin{equation} \label{eq:ft_g}
+S(\vec{q}) = 1+ \rho \int_V d\vec{r} e^{-i \vec{q} \cdot \vec{r}} g_2(r)
+\end{equation} 
+$r$ is the distance between two water molecules and $\vec{r}$ is the vector connecting them. To compute the integral directly from MD simulation of water, I have to do the following modifications: for each frame $k$ from the simulation, find all unique combination of pairs of molecules within distance $R$ and sum up their contributions to the Fourier transform. $R$ has to be chosen since the size of the simulation box is finite. Hence an estimate of $S(\vec{q})$ from on simulation frame is:
+\begin{equation} \label{eq:ft_sum}
+S(\vec{q})\approx\frac{1}{N} \sum_{i,j, =1}^{N}  e^{-i \vec{q} \cdot (\vec{r_i}-\vec{r_j})}  \Delta_{ij}
 \end{equation}
+where $\Delta_{ij} = 1$ if $\abs{\vec{r_i}-\vec{r_j}} \leq R$ and is 0 otherwise.
+
+Since liquid water is isotopic, intuition tells us that the pointing $(\vec{r_i}-\vec{r_j})$ shouldn't matter and only its length should. Debye's formula formalizes this and the above summation is equivalent to:
+\begin{equation} \label{eq:debye_sum}
+S(Q)\approx\frac{1}{N} \sum_{i,j, =1}^{N}  \frac{\sin(Qr_{ij})}{Qr_{ij}}  \Delta_{ij}
+\end{equation}
+where $r_{ij}= \vec{r_i}-\vec{r_j}$ and $Q$ is the magnitude of $\vec{q}$.
+
+Averaging over many independent simulation frames gives an estimate from the simulation of $S(Q)$. There is also a finite-size effect introduced by the simulation box. See the two Salcuse papers in the notes for details. The finite-size effect is implemented in the code. 
+
+I have done some checking to make sure that the explicit Fourier transform makes sense with my simulation data. So far I have checked that it produces a small imaginary part, and also seems to be only dependent on the magnitude of $\vec{q}$ but not its pointing. Also, equations~\ref{eq:ft_sum} and~\ref{eq:debye_sum} give the same answer when I use them to compute $S(Q)$ from averaging over independent frames from the simulations. This makes me think that I have been doing the explicit Fourier transform correctly for the radial distribution.
