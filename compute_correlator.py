@@ -36,7 +36,7 @@ import getopt
 # Code
 ##############################################################################
 def usage():
-    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -s <fstart> -e <fend>'
+    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -r <phi_range> -s <fstart> -e <fend>'
 
 def main(argv):
     # default values for options
@@ -47,10 +47,11 @@ def main(argv):
     frame_end = None
 #     q_inverse = 0.3
     q_range = [0.3]
+    phi_range = [0,1.0]
     
     
     try:
-        opts, args = getopt.getopt(argv,"hi:o:q:p:s:e:",["ifile=","ofile=","q_inv=","n_phi=","fstart=","fend="])
+        opts, args = getopt.getopt(argv,"hi:o:q:r:p:s:e:",["ifile=","ofile=","q_inv=","n_phi=","phi_range=","fstart=","fend="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -64,7 +65,6 @@ def main(argv):
         elif opt in ("-o", "--ofile"):
             outputfile = arg
         elif opt in ("-q", "--q_inv"):
-            print arg
             qs = arg.split('/')
             print qs
             if len(qs) > 1:
@@ -82,13 +82,24 @@ def main(argv):
                 
         elif opt in ("-p","--n_phi"):
             number_qs = int(arg)
+        elif opt in ("-r","--phi_range"):
+            phis = arg.split('/')
+            if len(phis) == 2:
+                try:
+                    phi_range = [float(this_phi) for this_phi in phis]
+                except ValueError:
+                    print 'Enter two values (in units of pi) for starting and ending phi separated by /. '
+                    sys.exit(2)
+            else:
+                print 'Enter two values (in units of pi) for starting and ending phi separated by /. '
+                sys.exit(2)
         elif opt in ("-s","--fstart"):
             frame_start = int(arg)
         elif opt in ("-e","--fend"):
             frame_end = int(arg)
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
-    print 'Number of phi used is %d'%number_qs
+    print 'Number of phi used is %d from phi = %.3g pi to phi = %.3g pi'%(number_qs,phi_range[0],phi_range[1])
 #     print 'Inverse of q is %.2f nm'%q_inverse
     print 'Computing correlators for the following q_inverse values in nm:'
     print q_range
@@ -117,7 +128,7 @@ def main(argv):
     
     # wavelength of laser
     wavelength = 0.1
-    phi = np.linspace(0,np.pi,number_qs)
+    phi = np.linspace(phi_range[0]*np.pi,phi_range[1]*np.pi,number_qs)
     dt = 1.0 # ps
     for q_inverse in q_range:
         print('computing for q_invers = %.3g nm' % q_inverse)
