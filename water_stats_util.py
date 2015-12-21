@@ -165,7 +165,7 @@ def make_file_paths(q_invs,run_name):
              for this_q in q_invs]
     return file_paths
 
-def make_polar_plot_coordinates(file_paths,q_s,align = True):
+def make_polar_plot_coordinates(file_paths,q_s,align = True,phi_or_psi = True):
     """Return the polar coordinates needed to make a polar plot of correlator
     
     Parameters
@@ -178,10 +178,10 @@ def make_polar_plot_coordinates(file_paths,q_s,align = True):
 
     Returns
     -------
-    phi_rad : list of float
+    angle_rad : list of float
         angles in the polar plot where there is data, radian
     data : array-like
-        data points to be plotted on the polar plot. shape is len(file_paths) by len(phi_rad) 
+        data points to be plotted on the polar plot. shape is len(file_paths) by len(angle_rad) 
 
     """
     all_corr = []
@@ -195,12 +195,15 @@ def make_polar_plot_coordinates(file_paths,q_s,align = True):
             all_corr.append(Corr)
     all_corr = np.array(all_corr)
     
-    phi_rad = [this_phi/360*2*np.pi for this_phi in phi]
-    points = [[q_s[i],phi_rad[j]] for i in range(len(q_s)) for j in range(len(phi))] 
+    if phi_or_psi:
+        angle_rad = [this_phi/360*2*np.pi for this_phi in phi]
+    else: 
+        angle_rad = [np.arccos(this_cos_psi) for this_cos_psi in cos_psi]
+    points = [[q_s[i],angle_rad[j]] for i in range(len(q_s)) for j in range(len(phi))] 
     
     # create grid values and interpolate
-    grid_r, grid_phi = np.meshgrid(q_s, phi_rad)
+    grid_r, grid_phi = np.meshgrid(q_s, angle_rad)
     data = griddata(points, all_corr.ravel(), (grid_r, grid_phi), method='cubic',fill_value=0)
     data = data.T
     
-    return phi_rad, data
+    return angle_rad, data
