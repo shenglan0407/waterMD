@@ -114,6 +114,17 @@ My suspicion is that this convergence is not achieved at the same rate for diffe
 
 There are more explorations that might be worthwhile to explore. First, I should establish a better understanding of the statistics of the geometric properties of the 3 million water tetrahedrons I have obtained from MD simulations so far; I should also try to figure out what the statistics should be for real water. Also, I want to further explore the effect of simulation box size on the distribution of tetrahedrons and on the computed correlator. I want to try Derek's code (thor) and compare its results to correlators computed from MD simulations. Moving on from here, I should also explore how this simulation can help understanding the DNA data.
 
+\section{Derivations}
+Going from equation~\ref{eq:Ipair} to equation~\ref{eq:Ipair_exp}
+\begin{align}
+I(\vec{q},\omega) &= \abs{f(q) (e^{-i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{-i \vec{q} \cdot (R_{\omega} \vec{r_2})})}^2 \nonumber \\ 
+&=\abs{f(q)}^2 (e^{-i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{-i \vec{q} \cdot (R_{\omega} \vec{r_2})})(e^{i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{i \vec{q} \cdot (R_{\omega} \vec{r_2})}) \nonumber\\
+&=\abs{f(q)}^2(1+e^{-i \vec{q} \cdot (R_{\omega} (\vec{r_2}-\vec{r_1}))}+e^{-i \vec{q} \cdot (R_{\omega} (\vec{r_1}-\vec{r_2}))}+1)\nonumber \\
+&=\abs{f(q)}^2(2+\cos{\vec{q} \cdot (R_{\omega} \vec{r_{12}}})+\cos{\vec{q} \cdot (R_{\omega} \vec{r_{21}}})+i\sin{\vec{q} \cdot (R_{\omega} \vec{r_{12}}})+i\sin{\vec{q} \cdot (R_{\omega} \vec{r_{21}}})) \nonumber
+\end{align}
+
+Since $\vec{r_{ij}} = -\vec{r_{ji}}$, $\cos{\theta}=\cos{(-\theta)}$, and $\sin{\theta}=-\sin{(-\theta)}$, the last line in the equation above simplifies to equation~\ref{eq:Ipair_exp}.
+
 \end{document} 
 
 \section{Sanity check}
