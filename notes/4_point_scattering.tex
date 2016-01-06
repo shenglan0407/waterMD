@@ -58,11 +58,18 @@ We use GROMACS version 5.0.2 to run the MD simulations. We start with a single w
 \subsection{Defining tetrahedrons}
 From the MD simulations, we can build a set water tetrahedrons. The position of a water molecule is defined only by the oxygen atom since the hydrogen atoms scatter x-ray much more weakly. In every simulation frame, we can find the three nearest neighbors for every water molecules and form one tetrahedron this way. Using only the nearest neighbors, which probably contribute most to C than neighbors further away, we can reduce the the number of tetrahedrons we need to sample and thus computation time. There are approximately as many unique\footnote{The combination of four water molecules that make up the vertices of the tetrahedron is unique. Some simulation frames yield fewer than 339 tetrahedrons because two molecules that are nearest neighbors of each other happen to share the two other nearest neighbors.} nearest-neighbor tetrahedrons as water molecules per simulation frame. For instance, 1000 statistically independent simulation frames generate about 330k tetrahedrons. 
 
-If the simulation is true the actual physics of liquid water, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for water. Its underlying statistics are therefore a good estimate of those of the true distribution. One way  to check is to look at the radial distribution function, i.e. the distribution of distances between pairs of water molecules (oxygens); it has a well-known shape. Figure~\ref{fig:rdf_mdtraj} shows the radial function produced by looking at as simulation of 10000 frames and 339 water molecules in $2.2\times2.2\times2.2$ nm box. The shape looks reasonable with a peak at about 0.3 nm. It will be interesting to compare radial distribution function produced by systems of different sizes since my understanding is that the periodic boundary condition has a larger effect on smaller systems.
+If the simulation is true the actual physics of liquid water, this set of water tetrahedron is a representation of the true distribution of tetrahedron geometries that are possible for water. Its underlying statistics are therefore a good estimate of those of the true distribution. One way  to check is to look at the radial distribution function, i.e. the distribution of distances between pairs of water molecules (oxygens); it has a well-known shape. Figure~\ref{fig:rdf_mdtraj} shows the radial function produced by looking at as simulation of 10000 frames and 339 water molecules in $2.2\times2.2\times2.2$ nm box. The shape looks reasonable with a peak at about 0.3 nm. 
 \begin{figure}[!h] 
   \centering
     \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj_run8.png}
      \caption{Radial distribution function of simulated water.} \label{fig:rdf_mdtraj}
+\end{figure}
+
+It seems interesting to compare radial distribution function produced by systems of different sizes since my understanding is that the periodic boundary condition has a larger effect on smaller systems. Figure~\ref{fig:rdf_mdtraj_sys_size} show the radial distribution functions obtain from two simulations, one of them is 8 times as big as the other. The two results look very similar, indicating similar statistics for the water molecules.
+\begin{figure}[!h] 
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj_system_size.png}
+     \caption{Comparing radial distribution functions from simulations with different box sizes} \label{fig:rdf_mdtraj_sys_size}
 \end{figure}
 
 {\it Look into the some statistics of the tetrahedrons (e.g. length of sides) and write about them here. }
@@ -113,6 +120,17 @@ My suspicion is that this convergence is not achieved at the same rate for diffe
 \end{figure}
 
 There are more explorations that might be worthwhile to explore. First, I should establish a better understanding of the statistics of the geometric properties of the 3 million water tetrahedrons I have obtained from MD simulations so far; I should also try to figure out what the statistics should be for real water. Also, I want to further explore the effect of simulation box size on the distribution of tetrahedrons and on the computed correlator. I want to try Derek's code (thor) and compare its results to correlators computed from MD simulations. Moving on from here, I should also explore how this simulation can help understanding the DNA data.
+
+\section{Derivations}
+Going from equation~\ref{eq:Ipair} to equation~\ref{eq:Ipair_exp}
+\begin{align}
+I(\vec{q},\omega) &= \abs{f(q) (e^{-i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{-i \vec{q} \cdot (R_{\omega} \vec{r_2})})}^2 \nonumber \\ 
+&=\abs{f(q)}^2 (e^{-i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{-i \vec{q} \cdot (R_{\omega} \vec{r_2})})(e^{i \vec{q} \cdot (R_{\omega} \vec{r_1})}+e^{i \vec{q} \cdot (R_{\omega} \vec{r_2})}) \nonumber\\
+&=\abs{f(q)}^2(1+e^{-i \vec{q} \cdot (R_{\omega} (\vec{r_2}-\vec{r_1}))}+e^{-i \vec{q} \cdot (R_{\omega} (\vec{r_1}-\vec{r_2}))}+1)\nonumber \\
+&=\abs{f(q)}^2(2+\cos{\vec{q} \cdot (R_{\omega} \vec{r_{12}}})+\cos{\vec{q} \cdot (R_{\omega} \vec{r_{21}}})+i\sin{\vec{q} \cdot (R_{\omega} \vec{r_{12}}})+i\sin{\vec{q} \cdot (R_{\omega} \vec{r_{21}}})) \nonumber
+\end{align}
+
+Since $\vec{r_{ij}} = -\vec{r_{ji}}$, $\cos{\theta}=\cos{(-\theta)}$, and $\sin{\theta}=-\sin{(-\theta)}$, the last line in the equation above simplifies to equation~\ref{eq:Ipair_exp}.
 
 \end{document} 
 
