@@ -84,7 +84,7 @@ def main(argv):
 #         file_list = ['corr_'+run_name+'_'+str(this_q)+'q_'+num_phi+'p.csv']
         file_list = []
         for this_start in frame_starts:
-            file_list.append('corr_'+run_name+'_'+str(this_q)+'q_'+num_phi+'p_'+str(this_start)+'.csv')
+            file_list.append('corr_'+run_name+'_'+str(this_q)+'q_'+str(num_phi)+'p_'+str(this_start)+'.csv')
     #     file_list = ['q0.465_formfactor_1.csv','q0.465_formfactor_2.csv']
         data_list = []
         q1_list =[]
