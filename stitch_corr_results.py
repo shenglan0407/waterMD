@@ -79,7 +79,8 @@ def main(argv):
         print '<runname> must be provided.'
         usage()
         sys.exit(2)
-
+        
+    all_pieces = []
     for this_q in qs:
 #         file_list = ['corr_'+run_name+'_'+str(this_q)+'q_'+num_phi+'p.csv']
         file_list = []
@@ -93,6 +94,7 @@ def main(argv):
         frame_list = []
         all_data = []
         for this_file in file_list:
+            all_pieces.append(os.getcwd()+'/computed_results/'+this_file)
             with open(os.getcwd()+'/computed_results/'+this_file,'r') as f:
                 csvreader = csv.reader(f,delimiter=' ',quotechar='|')
                 q1_list.append(next(csvreader))
@@ -127,7 +129,7 @@ def main(argv):
 
         all_data.extend(data_list[order[-1]])
 
-        with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'_'+str(this_q)+'q_'+num_phi+'p.csv','w') as f:
+        with open(os.getcwd()+'/computed_results/combined_corr_'+run_name+'_'+str(this_q)+'q_'+str(num_phi)+'p.csv','w') as f:
             csvwriter = csv.writer(f, delimiter=' ',
                                     quotechar='|', quoting=csv.QUOTE_MINIMAL)
             csvwriter.writerow(q1_list[0])
@@ -138,7 +140,19 @@ def main(argv):
     
         print("For q_inverse = %.3g \
         total number of simulation frame is %d. check if this is correct."%(this_q,len(all_data)))
-
+        
+    remove_file = raw_input('Do you want to remove the pieces permanently after combining? [y/n]:')
+    
+    if remove_file in ('y','yes','Y'):
+        for this_file in all_pieces:
+            try:
+                print("Removing... "+this_file)
+                os.remove(this_file)
+            except OSError:
+                pass
+    else:
+        print 'Keeping the pieces!'
+        
 
 if __name__ == "__main__":
    main(sys.argv[1:])
