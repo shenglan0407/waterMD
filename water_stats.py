@@ -95,41 +95,8 @@ class WaterStats:
             pass
         else:
             os.mkdir(os.getcwd()+"/output_data")
-        
-        # dictionary to store all tthd vectors, keys are frame numbers (str), 0-indexed
-        tthds_path = os.getcwd()+'/output_data/all_tthds_'+run_name+'.hdf5'
-        if os.path.isfile(tthds_path) and read_mod !='r':
-            input = raw_input('all_tthds database already exists. are you sure you want to append to/write it? [y or n]')
-            if input =='y':
-                self.all_tthds = h5py.File(tthds_path,read_mod)
-            else:
-                self.all_tthds = h5py.File(tthds_path,'r')
-        else:
-            self.all_tthds = h5py.File(tthds_path,read_mod)
-        
-        # dictionary to store all nearest tthd vectors
-        nearest_tthds_path =  os.getcwd()+'/output_data/nearest_tthds_'+run_name+'.hdf5'
-        if os.path.isfile(nearest_tthds_path) and read_mod !='r':
-            input = raw_input('nearest_tthds database already exists. are you sure you want to append to/write it? [y or n]')
-            if input =='y':
-                self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
-            else:
-                self.nearest_tthds = h5py.File(nearest_tthds_path,'r')
-        else:
-            self.nearest_tthds = h5py.File(nearest_tthds_path,read_mod)
-
-        # pdb file to store all nearest tthd coordinates
-        pdb_tthds_path = os.getcwd()+'/output_data/tthds_'+run_name+'.pdb'
-        if os.path.isfile(pdb_tthds_path) and read_mod !='r':
-            input = raw_input('pdb_tthds pdb file already exists. are you sure you want to append to/write it? [y or n]')
-            if input =='y':
-                self.pdb_tthds = open(pdb_tthds_path,'a')
-                self.tthd_counter = 0
-            else:
-                self.pdb_tthds = None
-        else:
-            self.pdb_tthds = open(pdb_tthds_path,'a')
-            self.tthd_counter = 0
+            
+        self.pdb_tthds = None
         
         # test database, future way of organizing
         if os.path.isfile(os.getcwd()+'/output_data/test_tthd_data.hdf5'):
@@ -158,7 +125,7 @@ class WaterStats:
     def compute_term_four_point(self,q_pair,tthd_pair):
         return (1+np.cos(np.dot(q_pair[0],tthd_pair[0])))*(1+np.cos(np.dot(q_pair[1],tthd_pair[1])))
     
-    def four_point_struct_factor(self,qs,cut_off,frame_ind,nearest_nb,test_dataset=True):
+    def four_point_struct_factor(self,qs,cut_off,frame_ind):
         """Computes the average correlator of tthds from a single simulation frame
         
         Parameters
@@ -177,29 +144,19 @@ class WaterStats:
         # this is a testing phase
         # if test_dataset is true, frame_ind (string) is interpreted as which set of tthd vectors to use.
         # there are 3 sets in the test dataset
-        if test_dataset:
-            print frame_ind
-            database = h5py.File(self.test_datapath,'r')
+        
+        print frame_ind
+        database = h5py.File(self.test_datapath,'r')
+        if self.run_name in database:
             this_tthds = database[self.run_name][frame_ind][:][:]
             database.close()
         else:
-            if nearest_nb:
-                if str(frame_ind) in self.nearest_tthds:
-    #                 print "recycling for frame %d!" % frame_ind
-                    this_tthds = self.nearest_tthds[str(frame_ind)][:][:]
-                else:
-                    this_tthds = ws.make_nearest_nb_tthds(cut_off,frame_ind)
-                    self.nearest_tthds.create_dataset(str(frame_ind),data = this_tthds)
-            else:
-                if str(frame_ind) in self.all_tthds:
-    #                 print "recycling for frame %d!" % frame_ind
-                    this_tthds = self.all_tthds[str(frame_ind)][:][:]
-                else:
-                    this_tthds = []
-                    for this_water in self.water_inds:
-                        this_tthds.extend(self.make_tthd(this_water,cut_off,frame_ind))
-                    self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
-        
+            print "data for this run do not exist"
+            database.close()
+            sys.exit()
+            
+            #To-do: ask user if she wants to create the tthd data for run
+
         corr_single_frame = []
         err_single_frame=[]
         aa = [3.0485,2.2868,1.5463,0.867]
@@ -232,7 +189,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,wavelength,frames,phi,cut_off = 0.5,nearest_nb=True,output = None,test_dataset = True):
+    def correlator(self,q,wavelength,frames,phi,cut_off = 0.5,output = None):
         """Computes 4-point correlator and saves results from each simulation frames in .csv file
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -284,7 +241,7 @@ class WaterStats:
 
         
         for this_frame in frames:
-            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb,test_dataset=test_dataset)
+            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_frame)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
@@ -399,10 +356,6 @@ class WaterStats:
                         r4[ii] = r4[ii]+half_box*2.
                     else:
                         r4[ii] = r4[ii]-half_box*2.
-            r_ij = r1-r2
-            r_kl = r3-r4 # nm
-            
-            tthds.append([r_ij,r_kl])
             
             if self.pdb_tthds == None:
                 pass
@@ -428,4 +381,3 @@ class WaterStats:
                 self.pdb_tthds.write('%s \n' % 'ENDMDL')
             
                 self.pdb_tthds.flush()
-        return tthds 
