@@ -405,6 +405,7 @@ class WaterStats:
                     self.all_tthds.create_dataset(str(frame_ind),data = this_tthds)
         
         corr_single_frame = []
+        err_single_frame=[]
         aa = [3.0485,2.2868,1.5463,0.867]
         bb = [13.2771,5.7011,0.3239,32.9089]
         cc = 0.2580
@@ -413,19 +414,21 @@ class WaterStats:
             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
         
         for this_q in qs:
-            this_sum = 0
+            this_sum = []
             
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
-                this_sum += self.compute_term_four_point(this_q,tt)
+                this_sum.append(self.compute_term_four_point(this_q,tt)*form_factor**4.0*4.0)
             
             n_tthds = len(this_tthds)
             
+            err = np.std(this_sum)/np.sqrt(n_tthds)
+            this_sum = np.mean(this_sum)
             
-            
-            corr_single_frame.append(this_sum/n_tthds*form_factor**4.0*4.0)
+            corr_single_frame.append(this_sum)
+            err_single_frame.append(err)
         
-        return corr_single_frame
+        return corr_single_frame,err_single_frame
         
         
      #    sum = 0
@@ -515,11 +518,12 @@ class WaterStats:
         for this_frame in frames:
 #             print('computing for frame number %d...' % this_frame)
             print this_frame
-            this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb,test_dataset=test_dataset)
+            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb,test_dataset=test_dataset)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                 csvwriter.writerow(this_row)
+                csvwriter.writerow(this_err)
                 csvfile.flush()
         
  ################################################################################       
