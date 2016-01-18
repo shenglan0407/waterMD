@@ -174,8 +174,8 @@ class WaterStats:
         
             #To-do: ask user if she wants to create the tthd data for run
 
-        corr_single_frame = []
-        err_single_frame=[]
+        corr_single_set = []
+        err_single_set=[]
         aa = [3.0485,2.2868,1.5463,0.867]
         bb = [13.2771,5.7011,0.3239,32.9089]
         cc = 0.2580
@@ -183,22 +183,38 @@ class WaterStats:
         for this_a,this_b in zip(aa,bb):
             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
         
+        this_I1 = []
+        for tt in this_tthds:
+            this_I1.append((1+np.cos(np.dot(qs[0][0],tt[1])))*form_factor**2.0*2.0)
+        I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
+        this_I1 = np.mean(this_I1)
+        
         for this_q in qs:
             this_sum = []
+            this_I2 = []
             
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
                 this_sum.append(self.compute_term_four_point(this_q,tt)*form_factor**4.0*4.0)
+                
+                this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor**2.0*2.0)
             
             n_tthds = len(this_tthds)
             
             err = np.std(this_sum)/np.sqrt(n_tthds)
             this_sum = np.mean(this_sum)
             
-            corr_single_frame.append(this_sum)
-            err_single_frame.append(err)
+            I2_err = np.std(this_I2)/np.sqrt(len(this_I2))
+            this_I2 = np.mean(this_I2)
+            
+            this_result = this_sum-this_I2*this_I1
+            this_err = np.sqrt(err**2.0+((I1_err/I1_err)**2.0+(I2_err/I2_err)**2.0)*(this_I1*this_I2)**2.0)
+            corr_single_set.append(this_result)
+            err_single_set.append(this_err)
+            
+            
         
-        return corr_single_frame,err_single_frame
+        return corr_single_set,err_single_set
 
     
     def atomic_form_factor(self,element):
