@@ -96,7 +96,17 @@ class WaterStats:
         else:
             os.mkdir(os.getcwd()+"/output_data")
             
-        self.pdb_tthds = None
+        pdb_tthds_path = os.getcwd()+'/output_data/tthds_'+run_name+'.pdb'
+        if os.path.isfile(pdb_tthds_path) and read_mod !='r':
+            input = raw_input('pdb_tthds pdb file already exists. are you sure you want to append to/write it? [y or n]')
+            if input =='y':
+                self.pdb_tthds = open(pdb_tthds_path,'a')
+                self.tthd_counter = 0
+            else:
+                self.pdb_tthds = None
+        else:
+            self.pdb_tthds = open(pdb_tthds_path,'a')
+            self.tthd_counter = 0
         
         # test database, future way of organizing
         if os.path.isfile(os.getcwd()+'/output_data/test_tthd_data.hdf5'):
@@ -125,7 +135,7 @@ class WaterStats:
     def compute_term_four_point(self,q_pair,tthd_pair):
         return (1+np.cos(np.dot(q_pair[0],tthd_pair[0])))*(1+np.cos(np.dot(q_pair[1],tthd_pair[1])))
     
-    def four_point_struct_factor(self,qs,cut_off,frame_ind):
+    def four_point_struct_factor(self,qs,cut_off,set):
         """Computes the average correlator of tthds from a single simulation frame
         
         Parameters
@@ -145,16 +155,23 @@ class WaterStats:
         # if test_dataset is true, frame_ind (string) is interpreted as which set of tthd vectors to use.
         # there are 3 sets in the test dataset
         
-        print frame_ind
+        print set
         database = h5py.File(self.test_datapath,'r')
         if self.run_name in database:
-            this_tthds = database[self.run_name][frame_ind][:][:]
+            if set == 'all':
+                all_sets = list(database[self.run_name].keys())
+                all_sets.pop(all_sets.index('tthdVertices'))
+                this_tthds = []
+                for this_set in all_sets:
+                    this_tthds.extend(database[self.run_name][this_set][:][:]) 
+            else:
+                this_tthds = database[self.run_name][set][:][:]
             database.close()
-        else:
+        else:        
             print "data for this run do not exist"
             database.close()
             sys.exit()
-            
+        
             #To-do: ask user if she wants to create the tthd data for run
 
         corr_single_frame = []
@@ -189,7 +206,7 @@ class WaterStats:
         """
         pass
 
-    def correlator(self,q,wavelength,frames,phi,cut_off = 0.5,output = None):
+    def correlator(self,q,wavelength,sets,phi,cut_off = 0.5,output = None):
         """Computes 4-point correlator and saves results from each simulation frames in .csv file
         Assume incident beam is along the z axis and water box sample is at origin
         
@@ -236,12 +253,11 @@ class WaterStats:
             csvwriter.writerow(q1)
             csvwriter.writerow(q2)
             csvwriter.writerow(phi)
-            csvwriter.writerow(frames)
+            csvwriter.writerow(sets)
         csvfile.close()
 
-        
-        for this_frame in frames:
-            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_frame)
+        for this_set in sets:
+            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_set)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
