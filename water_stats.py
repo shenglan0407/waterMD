@@ -515,7 +515,7 @@ class WaterStats:
         for this_frame in frames:
 #             print('computing for frame number %d...' % this_frame)
             print this_frame
-            this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb,test_dataset=True)
+            this_row = self.four_point_struct_factor(qs,cut_off,this_frame,nearest_nb,test_dataset=test_dataset)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
