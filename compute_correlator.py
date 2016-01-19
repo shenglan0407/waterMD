@@ -36,22 +36,21 @@ import getopt
 # Code
 ##############################################################################
 def usage():
-    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -r <phi_range> -s <fstart> -e <fend>'
+    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -r <phi_range> -s <sets>'
 
 def main(argv):
     # default values for options
     run_name = None
     outputfile = None
     number_qs = 10
-    frame_start = 1
-    frame_end = None
+    sets = ["all"]
 #     q_inverse = 0.3
     q_range = [0.3]
     phi_range = [0,1.0]
     
     
     try:
-        opts, args = getopt.getopt(argv,"hi:o:q:r:p:s:e:",["ifile=","ofile=","q_inv=","n_phi=","phi_range=","fstart=","fend="])
+        opts, args = getopt.getopt(argv,"hi:o:q:r:p:s:",["ifile=","ofile=","q_inv=","n_phi=","phi_range=","sets="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -93,10 +92,16 @@ def main(argv):
             else:
                 print 'Enter two values (in units of pi) for starting and ending phi separated by /. '
                 sys.exit(2)
-        elif opt in ("-s","--fstart"):
-            frame_start = int(arg)
-        elif opt in ("-e","--fend"):
-            frame_end = int(arg)
+        elif opt in ("-s","--sets"):
+            sets = arg.split('/')
+            if set(sets).issubset(set(["tthdSet1","tthdSet2","tthdSet3","all"])):
+                pass
+            else:
+                print 'Enter sets of tthds for computation separated by /. '
+                print 'You entered: '
+                print sets
+                print 'Allowed values are [\"tthdSet1\",\"tthdSet2\",\"tthdSet3\",\"all\"]'
+                sys.exit(2)
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
     print 'Number of phi used is %d from phi = %.3g pi to phi = %.3g pi'%(number_qs,phi_range[0],phi_range[1])
@@ -104,27 +109,20 @@ def main(argv):
     print 'Computing correlators for the following q_inverse values in nm:'
     print q_range
     
+    print "Sets of tthds used are: "
+    print sets   
+    
     if run_name == None:
         print '<runname> must be provided.'
         usage()
         sys.exit(2)
         
-#     data_path = os.getcwd()+'/data'
-    data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
+    data_path = os.getcwd()+'/data'
+#     data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
     traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
     print ('here is some info about the trajectory we are looking at:')
     print traj
     run = WaterStats(traj,run_name,read_mod='r')
-    if frame_start>=run.n_frames:
-        print 'Starting frame cannot be greater than the number of frames in simulation.'
-        usage()
-        sys.exit(2)
-    elif frame_end == None:
-        frames = np.arange(run.n_frames)[frame_start:]
-    else:
-        frames = np.arange(run.n_frames)[frame_start:frame_end]
-    
-    print("frames %d to %d are used for averaging." % (frames[0], frames[-1]))
     
     # wavelength of laser
     wavelength = 0.1
@@ -135,20 +133,25 @@ def main(argv):
         q = 1/q_inverse*np.pi*2.0
         
         if outputfile == None:
-            outputfile = 'corr_'+run_name+\
-            '_'+str(q_inverse)+'q_'+str(number_qs)+'p_'+\
-            str(frames[0])+\
-            '.csv'
+            if len(sets)==1:
+                outputfile = 'corr_'+run_name+\
+                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_'+\
+                str(sets[0])+\
+                '.csv'
+            elif "all" in sets:
+                outputfile = 'corr_'+run_name+\
+                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_all.csv'
+            else:
+                outputfile = 'corr_'+run_name+\
+                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_compare.csv'
 
         tic = time.clock()
-        run.correlator(q,wavelength,frames,phi,cut_off = 0.5,output=outputfile)
+        run.correlator(q,wavelength,sets,phi,cut_off = 0.5,output=outputfile)
         toc = time.clock()
 
         print("Correlator process time for %.3g nm: %.2f" % (q_inverse,(toc-tic)))
         outputfile = None
 
-    run.all_tthds.close()
-    run.nearest_tthds.close()
 
 if __name__ == "__main__":
    main(sys.argv[1:])
