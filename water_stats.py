@@ -190,25 +190,25 @@ class WaterStats:
         this_I1 = np.mean(this_I1)
         
         for this_q in qs:
-            this_sum = []
+            this_I1I2 = []
             this_I2 = []
             
             for tt in this_tthds:             
                 # derived new formula, ingnoring form factor for now for constant q
-                this_sum.append(self.compute_term_four_point(this_q,tt)*form_factor**4.0*4.0)
+                this_I1I2.append(self.compute_term_four_point(this_q,tt)*form_factor**4.0*4.0)
                 
                 this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor**2.0*2.0)
             
             n_tthds = len(this_tthds)
             
-            err = np.std(this_sum)/np.sqrt(n_tthds)
-            this_sum = np.mean(this_sum)
+            err = np.std(this_I1I2)/np.sqrt(n_tthds)
+            this_I1I2 = np.mean(this_I1I2)
             
             I2_err = np.std(this_I2)/np.sqrt(len(this_I2))
             this_I2 = np.mean(this_I2)
             
-            this_result = this_sum-this_I2*this_I1
-            this_err = np.sqrt(err**2.0+((I1_err/I1_err)**2.0+(I2_err/I2_err)**2.0)*(this_I1*this_I2)**2.0)
+            this_result = this_I1I2-this_I2*this_I1
+            this_err = np.sqrt(err**2.0+((I1_err/this_I1)**2.0+(I2_err/this_I2)**2.0)*(this_I1*this_I2)**2.0)
             corr_single_set.append(this_result)
             err_single_set.append(this_err)
             
