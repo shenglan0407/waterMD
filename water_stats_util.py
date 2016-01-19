@@ -18,6 +18,7 @@ import csv
 import numpy as np
 import os
 import h5py
+import sys
 
 from pylab import *
 import numpy as np
@@ -27,7 +28,7 @@ from scipy.interpolate import griddata
 # Code
 ##############################################################################
 
-def load_data(path,stride,partial=None,with_frame=False,debug = False):
+def load_data(path,with_set=True,debug = False):
     """Load computed correlator results from .csv file. return the average correlator, 
     its uncertainty, and list of phi used to compute the correlators
     
@@ -44,24 +45,25 @@ def load_data(path,stride,partial=None,with_frame=False,debug = False):
     debug : bool
         if True, return the full data set loaded to computed the average correlator and the magnitude of q1 as well
     """
-    all_data = []
+    corr_data = []
+    corr_err = []
     with open(path,'r') as f:
             csvreader = csv.reader(f,delimiter=' ',quotechar='|')
             q1=(next(csvreader))
             q2=(next(csvreader))
             phi=(next(csvreader))
-            if with_frame:
-                frames = (next(csvreader))
-            count = 0
+            sets = (next(csvreader))
+            even = True
             for row in csvreader:
-                count += 1
-                if count%stride==0:
-                    all_data.append(row)
-    if partial == None:
-        all_data = np.array(all_data,dtype=float)
-    else:
-        all_data = np.array(all_data[partial[0]:partial[1]]
-                            ,dtype=float)
+                if even:
+                    corr_data.append(row)
+                    even=False
+                else:
+                    corr_err.append(row)
+                    even = True
+    corr_data = np.array(corr_data,dtype=float)
+    corr_err = np.array(corr_err,dtype=float)
+    
     phi = np.array(phi,dtype = float)/np.pi*180
     q_mag = np.linalg.norm(np.array(q1,dtype=float))
     
@@ -69,17 +71,11 @@ def load_data(path,stride,partial=None,with_frame=False,debug = False):
     
     cos_psi = [np.dot(q1,this_q2)/(q_mag*np.linalg.norm(np.array(this_q2,dtype=float))) for this_q2 in new_q2]
 
-    Corr = [np.mean(all_data[:,ii]) for ii in range(len(phi))]
-    C_err = [np.std(np.array(all_data[:,ii])) \
-             /np.sqrt(len(all_data[:,ii])) for ii in range(len(phi))]
-    
-    print len(all_data[:,ii])
-    print 'The average error is %.2g. ' % np.mean(C_err)
     
     if debug:
-        return Corr,C_err,phi,cos_psi,all_data,q_mag
+        return corr_data,corr_err,phi,cos_psi,sets,q_mag
     else:
-        return Corr,C_err,phi,cos_psi
+        return corr_data,corr_err,phi,cos_psi,sets
 
 def load_q1_q2(path):
     """returns the q1 and the list of q2s used for computed correlator
@@ -144,7 +140,7 @@ def check_convergence(path,increment):
         diffs.append(diff)
     return diffs, q_mag
 
-def make_file_paths(q_invs,run_name):
+def make_file_paths(q_invs,run_name,n_points,tag):
     """returns a list of file names that are consistent with correlator naming conventions
     
     Parameters
@@ -160,12 +156,12 @@ def make_file_paths(q_invs,run_name):
         list of str, paths to computed data files
     """
     file_paths = [os.getcwd()+\
-                        '/computed_results/combined_corr_'+run_name+'_'\
-                                    +this_q+'q_30p.csv'\
+                        '/computed_results/corr_'+run_name+'_'\
+                                    +this_q+'q_'+str(n_points)+'p_'+tag+'.csv'\
              for this_q in q_invs]
     return file_paths
 
-def make_polar_plot_coordinates(file_paths,q_s,align = True,phi_or_psi = True):
+def make_polar_plot_coordinates(file_paths,q_s,this_set,align = True,phi_or_psi = True):
     """Return the polar coordinates needed to make a polar plot of correlator
     
     Parameters
@@ -186,9 +182,16 @@ def make_polar_plot_coordinates(file_paths,q_s,align = True,phi_or_psi = True):
     """
     all_corr = []
     for this_file in file_paths:
-        Corr,_,phi,cos_psi =load_data(this_file
+        corr_data,_,phi,cos_psi,sets =load_data(this_file
                         ,1
                         )
+        if this_set in sets:
+            Corr = corr_data[np.where(np.array(sets)==this_set)[0][0]]
+        else:
+            print "the set you want does not exist in this file:"
+            print this_file
+            sys.exit(2)
+
         if align:
             all_corr.append(Corr-min(Corr))
         else:
