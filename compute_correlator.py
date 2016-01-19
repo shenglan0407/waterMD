@@ -32,6 +32,7 @@ import os
 import time
 import sys
 import getopt
+import platform
 ##############################################################################
 # Code
 ##############################################################################
@@ -117,9 +118,15 @@ def main(argv):
         usage()
         sys.exit(2)
         
-    data_path = os.getcwd()+'/data'
-#     data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
+
+    if platform.system()=="Darwin":
+        # probably running this on shenglan's mac
+        data_path = '/Users/shenglanqiao/zauber/MD_simulations/water_box/cubic_1nm_'+run_name
+    else:
+        # otherwise I am probably running in on zauber
+        data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
     traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
+    
     print ('here is some info about the trajectory we are looking at:')
     print traj
     run = WaterStats(traj,run_name,read_mod='r')
