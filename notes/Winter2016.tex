@@ -1,0 +1,63 @@
+\documentclass[20pt]{article}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{commath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{Notes: C4 from models and data}
+\fancyhead[RE,LO]{Winter 2016}
+\begin{document}
+From Kam's work, we know that the autocorrelator is 
+\begin{equation}
+	C(q,\psi) = <I(\vec{q_1})I(\vec{q_2})>-<I(\vec{q_1})><I(\vec{q_2})>
+\end{equation}
+where $\vec{q_1}$ and $\vec{q_2}$ have the same magnitude $q$. To compute this from MD simulation we have:
+\begin{equation} \label{eq:est_corr}
+ <I(\vec{q_1})I(\vec{q_2})>  = \frac{ 4 \abs{f(q)}^4 }{N_{tthd}} \sum^{N}_{i,j,k,l}  (1+\cos{\vec{q_1} \cdot \vec r_{ij}} ) (1+\cos{\vec{q_2} \cdot \vec r_{kl}} )
+\end{equation}
+and
+\begin{equation} \label{eq:est_corr}
+ <I(\vec q)> = \frac{ 2 \abs{f(q)}^2}{N_{pair}} \sum^{N}_{i,j}  (1+\cos{\vec q \cdot \vec r_{ij}} )
+\end{equation}
+where $i$, $j$, $k$, $l$ are indices representing the vertices of the nearest-neighbor tetrahedrons. I use a two-vector representation of a tetrahedron, i.e each is denoted by $\{\vec r_{ij},\vec r_{lk}\}$, $\vec r_{ij} = \vec r_i- \vec r_j$ etc. That means for each set of neighbors, there are three different two-vector presentations. I will deal with how this will impact the calculation of $C(q,\psi)$ later. The averages are over all the tetrahedrons/pairs. 
+
+I used simulation ran laster quarter (Fall 2015) and the results are plotted in figure~\ref{fig:autocorr}.
+\begin{figure}[!h] 
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/autocorr_cos_psi_run7.jpg}
+     \caption{Autocorrelator $ C(q,\cos \psi)$ computed from simulated water} \label{fig:autocorr}
+\end{figure}
+I had a similar plot in the Fall 2015 notes that is just the $ <I(\vec{q_1})I(\vec{q_2})>$ term. Subtracting the $<I(\vec{q_1})><I(\vec{q_2})>$ "normalizes" the autocorrelator.
+
+\begin{figure}[!h] 
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/rdf_mdtraj_run8.png}
+     \caption{Radial distribution function of simulated water.} \label{fig:rdf_mdtraj}
+\end{figure}
+
+Examining the radial distribution function in figure~\ref{fig:rdf_mdtraj} tells me the upper bound of $q$ I might expect good sampling for tetrahedron configurations. The ref drops to zero at around 0.25 nm which translated into about 2.5 $\AA^{-1}$. I also know from finding nearest-neighbor tetrahedrons in MD simulations that $\abs{\vec r_{ij}}$'s are no more than 0.5 nm. So the lower bound of $q$ should be around 1.3 $\AA^{-1}$. So the range of $q$ I have looked at are between 1.3 to 2.5 $\AA^{-1}$.
+
+\section{two-vector representation of tetrahedrons}
+One question to ask here is: does the two-vector representation $\{\vec r_{ij},\vec r_{lk}\}$ affect the result of $C(q, \psi)$? If I have vertices labeled, 1, 2, 3, and 4, I can have three grouping if I am to divide them into two pairs, namely $\{(1, 2), (3, 4)\}$, $\{(1, 3), (2, 4)\}$, and $\{(1, 4), (2, 3)\}$. So every tetrahedron has three unique ways to scatter two photons (strictly speaking I think it have $3 \times 2 = 6$ way for two photons). The question is will $C(q, \psi)$ be dependent on which grouping I choose.
+
+My understanding is it does not but the grouping allows me to get more configurations to average over. Figure~\ref{fig:tthdsets_compare} show that the curves computed using different groups converges to their average with one sigma.
+\begin{figure}[!h] 
+  \centering
+    \includegraphics[width=1.0\textwidth]{../output/run3_compare_tthdsets_q135.jpg}
+     \caption{Comparing $C(q \psi)$ computed from different two-vector representations of the tetrahedron, $q = 1.35 \AA^{-1}$.} \label{fig:tthdsets_compare}
+\end{figure}
+
+\section{Projection of C4 into Legendre polynomials}
+How am I going to compare the simulation to the CXS data? Ultimately, I am hoping that the CXS is good enough for me to distinguish between models for water out there (TIP3, TIP4, SPC, SPC/E, etc.). 
+
+Again, Kam's paper tells me that I can expand $C(q, \psi)$ in terms of the Legendre polynomials $P_l(\cos \psi)$:
+\begin{equation}
+C(q, \psi) = \sum_l B_l(q) P_l(\cos \psi)
+\end{equation}
+
+I need error bars on the coefficient plot. I need to estimate how much simulation do I need to do to be able to distinguish $C$ amongst the different force fields/ models for water.
+\end{document}
