@@ -185,7 +185,7 @@ class WaterStats:
         
         this_I1 = []
         for tt in this_tthds:
-            this_I1.append((1+np.cos(np.dot(qs[0][0],tt[1])))*form_factor**2.0*2.0)
+            this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor**2.0*2.0)
         I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
         this_I1 = np.mean(this_I1)
         
