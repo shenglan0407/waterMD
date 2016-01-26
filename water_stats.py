@@ -132,9 +132,6 @@ class WaterStats:
             tthds.append([r_ij,r_kl])
         return tthds 
             
-    def compute_term_four_point(self,q_pair,tthd_pair):
-        return (1+np.cos(np.dot(q_pair[0],tthd_pair[0])))*(1+np.cos(np.dot(q_pair[1],tthd_pair[1])))
-    
     def four_point_struct_factor(self,qs,cut_off,set):
         """Computes the average correlator of tthds from a single simulation frame
         
@@ -193,9 +190,6 @@ class WaterStats:
             this_I2 = []
             
             for tt in this_tthds:             
-                # derived new formula, ingnoring form factor for now for constant q
-                # this_I1I2.append(self.compute_term_four_point(this_q,tt)*form_factor**4.0*4.0)
-                
                 this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor**2.0*2.0)
             
             n_tthds = len(this_tthds)
