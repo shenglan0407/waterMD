@@ -32,9 +32,9 @@ import time
 # Code
 ##############################################################################
 
-run_name = 'run9'
-data_path = '/home/shenglan/MD_simulations/water_box/cubic_2nm_run9'
-traj = md.load_trr(data_path+'/nvt-pr.trr', top = data_path+'/water-sol.gro')
+run_name = 'run10'
+data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_run10'
+traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
 print ('here is some info about the trajectory we are looking at:')
 print traj
 ws = WaterStats(traj,run_name)
@@ -44,16 +44,9 @@ tic = time.clock()
 for this_frame in range(ws.n_frames):
     tic_loop = time.clock()
     print 'finding tthds for frame %d' % this_frame
-    if str(this_frame) in ws.nearest_tthds:
-        pass
-    else:
-        tthds = ws.make_nearest_nb_tthds(cut_off,this_frame)
-        ws.nearest_tthds.create_dataset(str(this_frame),data = tthds)
+    ws.make_nearest_nb_tthds(cut_off,this_frame)
     toc_loop = time.clock()
     print('Total time for this frame: %.2f' %(toc_loop-tic_loop)) 
 
 toc = time.clock()
 print('Total time: %.2f' %(toc-tic))
-
-ws.all_tthds.close()
-ws.nearest_tthds.close()
