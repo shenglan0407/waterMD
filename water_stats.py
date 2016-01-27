@@ -152,6 +152,7 @@ class WaterStats:
         # if test_dataset is true, frame_ind (string) is interpreted as which set of tthd vectors to use.
         # there are 3 sets in the test dataset
         
+        
         print set
         database = h5py.File(self.test_datapath,'r')
         if self.run_name in database:
@@ -169,8 +170,11 @@ class WaterStats:
             database.close()
             sys.exit()
         
+        n_tthds = len(this_tthds)
+        
             #To-do: ask user if she wants to create the tthd data for run
-
+        
+        
         corr_single_set = []
         err_single_set=[]
         aa = [3.0485,2.2868,1.5463,0.867]
@@ -180,11 +184,17 @@ class WaterStats:
         for this_a,this_b in zip(aa,bb):
             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
         
+        
         this_I1 = []
         for tt in this_tthds:
             this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor**2.0*2.0)
+        
+        tic =time.clock()
         I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
         I1_mean = np.mean(this_I1)
+        toc = time.clock()
+        print "time taken is %g sec."%(toc-tic)
+        assert len(this_I1) == n_tthds
         
         for this_q in qs:
             this_I2 = []
@@ -192,8 +202,7 @@ class WaterStats:
             for tt in this_tthds:             
                 this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor**2.0*2.0)
             
-            n_tthds = len(this_tthds)
-            assert len(this_I1) == len(this_I2)
+            assert n_tthds == len(this_I2)
             
             this_I1I2 = [this_I1[ii]*this_I2[ii] for ii in range(len(this_I1))]
             err = np.std(this_I1I2)/np.sqrt(n_tthds)
