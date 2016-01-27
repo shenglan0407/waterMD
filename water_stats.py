@@ -355,7 +355,6 @@ class WaterStats:
         """
         nbs = self.find_nearest_nbs(cut_off,frame_ind,3)
         
-        tthds = []
         xyz_pos = self.traj[frame_ind].xyz
         half_box = self.traj.unitcell_lengths[0][0]/2.
         for this_nb in nbs:
