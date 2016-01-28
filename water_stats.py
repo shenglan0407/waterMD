@@ -131,8 +131,7 @@ class WaterStats:
             
             tthds.append([r_ij,r_kl])
         return tthds 
-    
-    @profile     
+   
     def four_point_struct_factor(self,qs,cut_off,set):
         """Computes the average correlator of tthds from a single simulation frame
         
@@ -191,11 +190,8 @@ class WaterStats:
             this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor**2.0*2.0)
         
         this_I1 = np.array(this_I1, dtype = np.float64)
-        tic =time.clock()
         I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
         I1_mean = np.mean(this_I1)
-        toc = time.clock()
-        print "time taken is %g sec."%(toc-tic)
         assert len(this_I1) == n_tthds
         
         for this_q in qs:
