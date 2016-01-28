@@ -131,7 +131,8 @@ class WaterStats:
             
             tthds.append([r_ij,r_kl])
         return tthds 
-            
+    
+    @profile     
     def four_point_struct_factor(self,qs,cut_off,set):
         """Computes the average correlator of tthds from a single simulation frame
         
@@ -189,6 +190,7 @@ class WaterStats:
         for tt in this_tthds:
             this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor**2.0*2.0)
         
+        this_I1 = np.array(this_I1, dtype = np.float64)
         tic =time.clock()
         I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
         I1_mean = np.mean(this_I1)
@@ -204,11 +206,13 @@ class WaterStats:
             
             assert n_tthds == len(this_I2)
             
-            this_I1I2 = [this_I1[ii]*this_I2[ii] for ii in range(len(this_I1))]
+            this_I1I2 = [this_I1[ii]*this_I2[ii] for ii in range(n_tthds)]
+            this_I1I2 = np.array(this_I1I2,dtype=np.float64)
             err = np.std(this_I1I2)/np.sqrt(n_tthds)
             I1I2_mean = np.mean(this_I1I2)
             
-            I2_err = np.std(this_I2)/np.sqrt(len(this_I2))
+            this_I2 = np.array(this_I2,dtype=np.float64)
+            I2_err = np.std(this_I2)/np.sqrt(n_tthds)
             I2_mean = np.mean(this_I2)
             
             this_result = I1I2_mean-I2_mean*I1_mean
