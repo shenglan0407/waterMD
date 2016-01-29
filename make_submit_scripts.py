@@ -1,6 +1,7 @@
 import numpy as py
 import os
 
+run_name  = 'run10'
 q_invs_float = [0.292,0.299,0.306,
                 0.314,0.322,0.331,0.34,
                 0.35,0.36,0.37,0.38,0.393,
@@ -17,6 +18,6 @@ with open(os.getcwd()+'/barley_scripts/submitBatch.sh','w') as submit:
             this_file.write('#$ -m besa\n')
             this_file.write('#$ -j y\n')
             this_file.write('#$ -o /srv/zfs01/user_data/shenglan/waterMD/barley_scripts/out_q'+str(this_q)+'.log\n')
-            this_file.write('python compute_correlator.py -i run7 -q '+str(this_q)+' -p 100 -s all\n')
+            this_file.write('python compute_correlator.py -i '+run_name+' -q '+str(this_q)+' -p 100 -s all\n')
             this_file.write('hostname\n')
         submit.write('qsub '+sub_file+'\n')
