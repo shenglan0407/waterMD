@@ -123,12 +123,14 @@ def main(argv):
         sys.exit(2)
         
 
-    if platform.system()=="Darwin":
-        # probably running this on shenglan's mac
+    if platform.node()=='DN0a22c83d.SUNet':
+        # running this on shenglan's mac
         data_path = '/Users/shenglanqiao/zauber/MD_simulations/water_box/cubic_1nm_'+run_name
-    else:
-        # otherwise I am probably running in on zauber
+    elif platform.node()=='Zauber':
+        # running in on zauber
         data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
+    else:
+        data_path =os.getcwd()+'/data'
     traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
     
     print ('here is some info about the trajectory we are looking at:')
