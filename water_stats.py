@@ -131,8 +131,26 @@ class WaterStats:
             
             tthds.append([r_ij,r_kl])
         return tthds 
+        
+    def oxygen_form_factor(self,q1,q2):
+        # for oxygen only
+        aa = [3.0485,2.2868,1.5463,0.867]
+        bb = [13.2771,5.7011,0.3239,32.9089]
+        cc = 0.2580
+
+        if q1==q2:
+            form_factor = cc
+            for this_a,this_b in zip(aa,bb):
+                form_factor += this_a * np.exp(-this_b*(q1/(4*np.pi))**2.0)
+
+        else:
+            form_factor = [cc,cc]
+            for this_a,this_b in zip(aa,bb):
+                form_factor[0] += this_a * np.exp(-this_b*(q1/(4*np.pi))**2.0)
+                form_factor[1] += this_a * np.exp(-this_b*(q2/(4*np.pi))**2.0)
+        return form_factor
             
-    def four_point_struct_factor(self,qs,cut_off,set):
+    def four_point_struct_factor(self,qs,form_factor,cut_off,set):
         """Computes the average correlator of tthds from a single simulation frame
         
         Parameters
@@ -140,6 +158,8 @@ class WaterStats:
         qs : np.array, (n,2,3)
             pairs of (q1,q2) for computing correlator. n is the number of different pairs
             to compute for.
+        form_facter: list, (n,2)
+            list of atomic form factors, each element of the list is (f(q1),f(q2))  
         cut_off : float
             cuttoff distance for looking for nearest neighbors. Should be set such that at
             least 3 waters can be found within that distance
@@ -177,17 +197,18 @@ class WaterStats:
         
         corr_single_set = []
         err_single_set=[]
-        aa = [3.0485,2.2868,1.5463,0.867]
-        bb = [13.2771,5.7011,0.3239,32.9089]
-        cc = 0.2580
-        form_factor = cc
-        for this_a,this_b in zip(aa,bb):
-            form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
+       # for oxygen only
+#         aa = [3.0485,2.2868,1.5463,0.867]
+#         bb = [13.2771,5.7011,0.3239,32.9089]q[1]
+#         cc = 0.2580
+#         form_factor = cc
+#         for this_a,this_b in zip(aa,bb):
+#             form_factor += this_a * np.exp(-this_b*(np.linalg.norm(qs[0])/(4*np.pi))**2.0)
         
         
         this_I1 = []
         for tt in this_tthds:
-            this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor**2.0*2.0)
+            this_I1.append((1+np.cos(np.dot(qs[0][0],tt[0])))*form_factor[0][0]**2.0*2.0)
         
         tic =time.clock()
         I1_err = np.std(this_I1)/np.sqrt(len(this_I1))
@@ -196,11 +217,12 @@ class WaterStats:
         print "time taken is %g sec."%(toc-tic)
         assert len(this_I1) == n_tthds
         
-        for this_q in qs:
+        for kk in range(len(qs)):
             this_I2 = []
+            this_q=qs[kk]
             
             for tt in this_tthds:             
-                this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor**2.0*2.0)
+                this_I2.append((1+np.cos(np.dot(this_q[1],tt[1])))*form_factor[kk][1]**2.0*2.0)
             
             assert n_tthds == len(this_I2)
             
@@ -232,8 +254,9 @@ class WaterStats:
         
         Parameters
         ----------
-        q : float
-            magnitude of the q vectors, assumed to be same for now (auto-correlator) 
+        q : float or list of length 2
+            magnitude(s) of the q vectors. If there is only one number then autocorrelator is computed.
+            otherwise, cross-correlator is computed. 
         wavelength : float
             wavelength in nm of the incident beam
         frames : list
@@ -248,16 +271,32 @@ class WaterStats:
         output : str
             File name to save the results in, default None.
         """
- 
         
         q_beam=2.0*np.pi/wavelength
         
-        # generate q1 and many q2s
-        q1 = np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
-        q2 = np.array([np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0)*np.cos(this_phi),q*np.sqrt(1-(q/(2.*q_beam))**2.0)*np.sin(this_phi),q1[2]]) for this_phi in phi])
-        # make pairs of q1 and q2
-        qs = np.array([[q1,this_q2] for this_q2 in q2])
-        
+        if type(q)==float:
+            # if q is a float, compute auto correlator
+            # generate q1 and many q2s
+            q1 = np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0),0,-q**2.0/(2.0*q_beam)])
+            q2 = np.array([np.array([q*np.sqrt(1-(q/(2.*q_beam))**2.0)*np.cos(this_phi),q*np.sqrt(1-(q/(2.*q_beam))**2.0)*np.sin(this_phi),q1[2]]) for this_phi in phi])
+            # make pairs of q1 and q2
+            qs = np.array([[q1,this_q2] for this_q2 in q2])
+            
+            # Now compute all the form factors since they only depend on qs
+            ff = self.oxygen_form_factor(q,q)
+            ff = [[ff,ff]]*len(qs)
+            
+        elif type(q) ==list:
+            # if q is a list, compute cross correlator for the first two elements 
+            q1 = np.array([q[0]*np.sqrt(1-(q[0]/(2.*q_beam))**2.0),0,-q[0]**2.0/(2.0*q_beam)])
+            q2 = np.array([np.array([q[1]*np.sqrt(1-(q[1]/(2.*q_beam))**2.0)*np.cos(this_phi)
+            ,q[1]*np.sqrt(1-(q[1]/(2.*q_beam))**2.0)*np.sin(this_phi)
+            ,-q[1]**2.0/(2.0*q_beam)]) for this_phi in phi])
+            # make pairs of q1 and q2
+            qs = np.array([[q1,this_q2] for this_q2 in q2])
+            # Now compute all the form factors since they only depend on qs
+            ff = [self.oxygen_form_factor(np.linalg.norm(this_q[0]),np.linalg.norm(this_q[1])) for this_q in qs]
+       
         if output == None:
             output_path = os.getcwd()+'/computed_results/corr_'+self.run_name+'.csv'
         else:
@@ -277,7 +316,7 @@ class WaterStats:
         csvfile.close()
 
         for this_set in sets:
-            this_row,this_err = self.four_point_struct_factor(qs,cut_off,this_set)
+            this_row,this_err = self.four_point_struct_factor(qs,ff,cut_off,this_set)
             with open(output_path,'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)

@@ -37,7 +37,7 @@ import platform
 # Code
 ##############################################################################
 def usage():
-    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -r <phi_range> -s <sets>'
+    print './compute_correlator.py -i <runname> -o <outputfile> -q <q_inv> -p <nphi> -r <phi_range> -s <sets> -c'
 
 def main(argv):
     # default values for options
@@ -48,10 +48,11 @@ def main(argv):
 #     q_inverse = 0.3
     q_range = [0.3]
     phi_range = [0,1.0]
+    autocorr = True
     
     
     try:
-        opts, args = getopt.getopt(argv,"hi:o:q:r:p:s:",["ifile=","ofile=","q_inv=","n_phi=","phi_range=","sets="])
+        opts, args = getopt.getopt(argv,"hi:o:q:r:p:s:c",["ifile=","ofile=","q_inv=","n_phi=","phi_range=","sets="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -103,6 +104,9 @@ def main(argv):
                 print sets
                 print 'Allowed values are [\"tthdSet1\",\"tthdSet2\",\"tthdSet3\",\"all\"]'
                 sys.exit(2)
+        elif opt in ("-c","--cross"):
+            autocorr=False
+            print "Computing cross correlator between two q's..."
     print 'Input run is %s' % run_name
     print 'Output file is %s'% outputfile
     print 'Number of phi used is %d from phi = %.3g pi to phi = %.3g pi'%(number_qs,phi_range[0],phi_range[1])
@@ -135,30 +139,63 @@ def main(argv):
     wavelength = 0.1
     phi = np.linspace(phi_range[0]*np.pi,phi_range[1]*np.pi,number_qs)
     dt = 1.0 # ps
-    for q_inverse in q_range:
-        print('computing for q_invers = %.3g nm' % q_inverse)
-        q = 1/q_inverse*np.pi*2.0
+    
+#########################################################################################
+# Auto-correlator
+    if autocorr:
+        for q_inverse in q_range:
+            print('computing for q_invers = %.3g nm' % q_inverse)
+            q = 1/q_inverse*np.pi*2.0
+        
+            if outputfile == None:
+                if len(sets)==1:
+                    outputfile = 'corr_'+run_name+\
+                    '_'+str(q_inverse)+'q_'+str(number_qs)+'p_'+\
+                    str(sets[0])+\
+                    '.csv'
+                elif "all" in sets:
+                    outputfile = 'corr_'+run_name+\
+                    '_'+str(q_inverse)+'q_'+str(number_qs)+'p_all.csv'
+                else:
+                    outputfile = 'corr_'+run_name+\
+                    '_'+str(q_inverse)+'q_'+str(number_qs)+'p_compare.csv'
+
+            tic = time.clock()
+            run.correlator(q,wavelength,sets,phi,cut_off = 0.5,output=outputfile)
+            toc = time.clock()
+
+            print("Correlator process time for %.3g nm: %.2f" % (q_inverse,(toc-tic)))
+            outputfile = None
+#########################################################################################
+# cross-correlator
+    else:
+        try:
+            assert len(q_range)==2
+        except AssertionError:
+            print "need exactly two q values for cross-correlator"
+            sys.exit(2)
+        q=[1/q_inverse*np.pi*2.0 for q_inverse in q_range]
+        print "computing cross correlator between %.3f and %.3f"%(q[0],q[1])
         
         if outputfile == None:
             if len(sets)==1:
-                outputfile = 'corr_'+run_name+\
-                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_'+\
+                outputfile = 'crosscorr_'+run_name+\
+                '_'+str(q[0])+'_'+str(q[1])+'q_'+str(number_qs)+'p_'+\
                 str(sets[0])+\
                 '.csv'
             elif "all" in sets:
-                outputfile = 'corr_'+run_name+\
-                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_all.csv'
+                outputfile = 'crosscorr_'+run_name+\
+                '_'+str(q[0])+'_'+str(q[1])+'q_'+str(number_qs)+'p_all.csv'
             else:
-                outputfile = 'corr_'+run_name+\
-                '_'+str(q_inverse)+'q_'+str(number_qs)+'p_compare.csv'
-
+                outputfile = 'crosscorr_'+run_name+\
+                '_'+str(q[0])+'_'+str(q[1])+'q_'+str(number_qs)+'p_compare.csv'
         tic = time.clock()
         run.correlator(q,wavelength,sets,phi,cut_off = 0.5,output=outputfile)
         toc = time.clock()
 
-        print("Correlator process time for %.3g nm: %.2f" % (q_inverse,(toc-tic)))
-        outputfile = None
+        print("Correlator process time: %.2f" % (toc-tic))
 
+    
 
 if __name__ == "__main__":
    main(sys.argv[1:])
