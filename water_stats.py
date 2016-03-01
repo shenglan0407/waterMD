@@ -325,7 +325,7 @@ class WaterStats:
                 csvfile.flush()
     
     
-    def find_nearest_nbs(self,cut_off,frame_ind,N_nbs):
+    def find_nearest_nbs(self,cut_off,frame_ind,N_nbs=None,find_unique=True):
         """Finds the N nearest neighbors of all waters in a single simulation frame and returns
         all unique nearest-neighbor tthds as an (n,4) array. n is the number of tthds found in 
         this frame. Every tthd is represented by 4 indices of the water molecules (oxygens) that
@@ -350,30 +350,40 @@ class WaterStats:
             # find all the neighbors with the cut_off distance for each water molecule
             nbs = md.compute_neighbors(frame,
         cut_off,[this_ind],haystack_indices = self.water_inds)[0]
-            
-            while len(nbs)!= N_nbs:
-                if len(nbs) > N_nbs:
-                    # compute all the distance between neighbors and only keep the closest
-                    # N_nbs ones
-                    pairs = [[this_ind,this_nb] for this_nb in nbs]
-                    distances=md.compute_distances(frame,pairs)[0]
-                    min_three = np.argsort(distances)[:][:N_nbs]
-                    nbs = [nbs[ii] for ii in min_three]
+            if N_nbs!=None:
+                while len(nbs)!= N_nbs:
+                    if len(nbs) > N_nbs:
+                        # compute all the distance between neighbors and only keep the closest
+                        # N_nbs ones
+                        pairs = [[this_ind,this_nb] for this_nb in nbs]
+                        distances=md.compute_distances(frame,pairs)[0]
+                        min_N = np.argsort(distances)[:][:N_nbs]
+                        nbs = [nbs[ii] for ii in min_N]
                 
-                else:
-                    print 'increase cut_off!'
-            # keep nbs a list so append can happen
-            nbs = [nbs[ii] for ii in range(len(nbs))]
+                    else:
+                        print 'increase cut_off!'
+                # keep nbs a list so append can happen
+                nbs = [nbs[ii] for ii in range(len(nbs))]
+            else:
+                # not limited by numbers of nbs but only cutoff distance
+                pairs = [[this_ind,this_nb] for this_nb in nbs]
+                distances=md.compute_distances(frame,pairs)[0]
+                sorted_ind= np.argsort(distances)[:][:]
+                nbs = [nbs[ii] for ii in sorted_ind]
             # add the ind of the water for whom neighbors have been found to the list
             nbs.append(this_ind)
-            # sort the list so it can be comapred to set of neighbors we already found
-            nbs.sort()
+            if find_unique:
+                # sort the list so it can be comapred to set of neighbors we already found
+                nbs.sort()
             
-            if nbs in nearest_nbs:
-                # if this set of nearest neighbors already exist, don't added it to the list
-                print "not unique"
+                if nbs in nearest_nbs:
+                    # if this set of nearest neighbors already exist, don't added it to the list
+                    print "not unique"
+                else:
+                    # only add to list if unique
+                    nearest_nbs.append(nbs)
             else:
-                # only add to list if unique
+                # if I am just looking for neighbors, I don't care about uniqueness
                 nearest_nbs.append(nbs)
         # return list as an numpy array
         return np.array(nearest_nbs)
@@ -392,7 +402,7 @@ class WaterStats:
         frame_ind : int
             the index of the frame in which to find nearest neighbor tthds
         """
-        nbs = self.find_nearest_nbs(cut_off,frame_ind,3)
+        nbs = self.find_nearest_nbs(cut_off,frame_ind,N_nbs=3)
         
         xyz_pos = self.traj[frame_ind].xyz
         half_box = self.traj.unitcell_lengths[0][0]/2.
@@ -455,3 +465,36 @@ class WaterStats:
                 self.pdb_tthds.write('%s \n' % 'ENDMDL')
             
                 self.pdb_tthds.flush()
+    
+    def correct_period_bound(self,r1,r2,half_box):
+        dr = r1-r2
+        for ii in range(3):
+            # if x, y or z coordinate is greater than half the simulation box size, correct
+            # for periodic boundary condition by 'folding' the position vector over
+            if np.abs(dr[ii]) > half_box:
+                if r2[ii]<r1[ii]:
+                    r2[ii] = r2[ii]+half_box*2.
+                else:
+                    r2[ii] = r2[ii]-half_box*2.
+        return r2
+    
+    def make_nearest_nbs(self,cut_off,frame_ind,N_nbs=None,find_unique=False):
+        nbs=self.find_nearest_nbs(cut_off,frame_ind,N_nbs=N_nbs,find_unique=find_unique)
+        xyz_pos = self.traj[frame_ind].xyz
+        half_box = self.traj.unitcell_lengths[0][0]/2.
+        
+        all_water_nbs=[]
+        for this_nb in nbs:
+            rs = [xyz_pos[0,this_nb[ind],:] for ind in range(len(this_nb))]
+            # correct for periodic boundary conditions
+            center_atom=rs[-1]
+            rs_corrected = [self.correct_period_bound(center_atom,rs[ii],half_box) for ii in range(len(rs)-1)]
+            # append the center atom to the end of the list
+#             rs_corrected=[]
+            rs_corrected.append(center_atom)
+            all_water_nbs.append(rs_corrected)
+#             all_water_nbs.append(rs)
+            
+        
+        return all_water_nbs
+    
