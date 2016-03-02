@@ -487,7 +487,6 @@ class WaterStats:
         water_count=0
         all_water_nbs=[]
         pos=np.zeros((self.n_waters,len(nbs[0])*2,3))
-        corrected_pos=np.zeros((self.n_waters,len(nbs[0])*2,3))
         for this_nb in nbs:
             nb_count=0
             for ind in this_nb:
