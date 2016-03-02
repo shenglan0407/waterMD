@@ -369,7 +369,8 @@ class WaterStats:
                 pairs = [[this_ind,this_nb] for this_nb in nbs]
                 distances=md.compute_distances(frame,pairs)[0]
                 sorted_ind= np.argsort(distances)[:][:]
-                nbs = [nbs[ii] for ii in sorted_ind]
+                sorted_nbs = [nbs[ii] for ii in sorted_ind]
+                nbs=sorted_nbs
             # add the ind of the water for whom neighbors have been found to the list
             nbs.append(this_ind)
             if find_unique:
@@ -479,21 +480,29 @@ class WaterStats:
         return r2
     
     def make_nearest_nbs(self,cut_off,frame_ind,N_nbs=None,find_unique=False):
-        nbs=self.find_nearest_nbs(cut_off,frame_ind,N_nbs=N_nbs,find_unique=find_unique)
+        nbs=self.find_nearest_nbs(cut_off,frame_ind,N_nbs=None,find_unique=False)
         xyz_pos = self.traj[frame_ind].xyz
         half_box = self.traj.unitcell_lengths[0][0]/2.
-        
+
+        water_count=0
         all_water_nbs=[]
+        pos=np.zeros((self.n_waters,len(nbs[0])*2,3))
+        corrected_pos=np.zeros((self.n_waters,len(nbs[0])*2,3))
         for this_nb in nbs:
-            rs = [xyz_pos[0,this_nb[ind],:] for ind in range(len(this_nb))]
+            nb_count=0
+            for ind in this_nb:
+                pos[water_count,nb_count,:]=xyz_pos[0,ind,:]
+                nb_count+=1
+                
+
             # correct for periodic boundary conditions
-            center_atom=rs[-1]
-            rs_corrected = [self.correct_period_bound(center_atom,rs[ii],half_box) for ii in range(len(rs)-1)]
-            # append the center atom to the end of the list
-#             rs_corrected=[]
-            rs_corrected.append(center_atom)
+            rs_corrected = [self.correct_period_bound(pos[water_count,len(this_nb)-1,:]
+            ,pos[water_count,ind,:],half_box) \
+            for ind in range(len(this_nb))]
+        
             all_water_nbs.append(rs_corrected)
-#             all_water_nbs.append(rs)
+            water_count+=1
+
             
         
         return all_water_nbs
