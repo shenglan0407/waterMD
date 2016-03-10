@@ -30,7 +30,7 @@ import mdtraj as md
 
 
 
-run_name = 'run7'
+run_name = 'run13'
 
 database = h5py.File(os.getcwd()+'/output_data/test_tthd_data.hdf5','a')
 
@@ -41,7 +41,7 @@ if run_name in database:
         
         this_run = database.create_group(run_name)
         data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
-        traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
+        traj = md.load_trr(data_path+'/water-md.trr', top = data_path+'/water-md.gro')
         print ('here is some info about the trajectory we are looking at:')
         print traj
         n_waters = traj.topology.n_residues
@@ -59,7 +59,7 @@ if run_name in database:
 else:
     this_run = database.create_group(run_name)
     data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_'+run_name
-    traj = md.load_trr(data_path+'/nvt-pr_'+run_name+'.trr', top = data_path+'/water-sol_'+run_name+'.gro')
+    traj = md.load_trr(data_path+'/water-md.trr', top = data_path+'/water-md.gro')
     print ('here is some info about the trajectory we are looking at:')
     print traj
     n_waters = traj.topology.n_residues
