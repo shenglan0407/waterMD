@@ -138,7 +138,7 @@ def main(argv):
     run = WaterStats(traj,run_name,read_mod='r')
     
     # wavelength of laser
-    wavelength = 0.1
+    wavelength = 0.1844
     phi = np.linspace(phi_range[0]*np.pi,phi_range[1]*np.pi,number_qs)
     dt = 1.0 # ps
     
