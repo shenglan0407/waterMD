@@ -32,7 +32,7 @@ import time
 # Code
 ##############################################################################
 
-run_name = 'run13'
+run_name = 'run14'
 data_path = '/home/shenglan/MD_simulations/water_box/cubic_1nm_%s'%run_name
 traj = md.load_trr(data_path+'/water-md.trr', top = data_path+'/water-md.gro')
 print ('here is some info about the trajectory we are looking at:')

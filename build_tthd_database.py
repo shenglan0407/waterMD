@@ -30,7 +30,7 @@ import mdtraj as md
 
 
 
-run_name = 'run13'
+run_name = 'run16'
 
 database = h5py.File(os.getcwd()+'/output_data/test_tthd_data.hdf5','a')
 
