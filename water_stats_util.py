@@ -75,6 +75,28 @@ def load_data(path,debug = False):
     else:
         return corr_data,corr_err,phi,cos_psi,sets
 
+
+def load_dataset(file_paths):
+    """loads data in list of file and returns the whole dataset in arrays
+    Parameters
+    ----------
+    
+    file_paths: list of strings, list of file names with data to be loaded
+    """
+    all_corr=[]
+    all_err=[]
+    all_psi=[]
+
+    for this_file in file_paths:
+        Corrs,err,_,cos_psi,_ =load_data(this_file)
+        psi = np.arccos(cos_psi)/np.pi*180
+        
+        all_corr.append(Corrs)
+        all_err.append(err)
+        all_psi.append(psi)
+        
+    return np.array(all_corr),np.array(all_err),np.array(all_psi)
+    
 def load_q1_q2(path):
     """returns the q1 and the list of q2s used for computed correlator
     
