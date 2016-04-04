@@ -28,7 +28,7 @@ from scipy.interpolate import griddata
 # Code
 ##############################################################################
 
-def load_data(path,with_set=True,debug = False):
+def load_data(path,debug = False):
     """Load computed correlator results from .csv file. return the average correlator, 
     its uncertainty, and list of phi used to compute the correlators
     
@@ -40,8 +40,6 @@ def load_data(path,with_set=True,debug = False):
         if 1 load data computed from every frame. if >1 skip every stride-th frame
     partial : tuple-like, (i, j)
         range of frames for which computed data is to be loaded, from the ith frame to the jth frame
-    with_frame : bool
-        if True, the csv file has a line that records the indices of frames used to compute. default False
     debug : bool
         if True, return the full data set loaded to computed the average correlator and the magnitude of q1 as well
     """
