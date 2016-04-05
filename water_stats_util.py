@@ -28,7 +28,7 @@ from scipy.interpolate import griddata
 # Code
 ##############################################################################
 
-def load_data(path,with_set=True,debug = False):
+def load_data(path,debug = False):
     """Load computed correlator results from .csv file. return the average correlator, 
     its uncertainty, and list of phi used to compute the correlators
     
@@ -40,8 +40,6 @@ def load_data(path,with_set=True,debug = False):
         if 1 load data computed from every frame. if >1 skip every stride-th frame
     partial : tuple-like, (i, j)
         range of frames for which computed data is to be loaded, from the ith frame to the jth frame
-    with_frame : bool
-        if True, the csv file has a line that records the indices of frames used to compute. default False
     debug : bool
         if True, return the full data set loaded to computed the average correlator and the magnitude of q1 as well
     """
@@ -77,6 +75,42 @@ def load_data(path,with_set=True,debug = False):
     else:
         return corr_data,corr_err,phi,cos_psi,sets
 
+
+def load_dataset(file_paths):
+    """loads data in list of file and returns the whole dataset in arrays
+    Parameters
+    ----------
+    
+    file_paths: list of strings, list of file names with data to be loaded
+    """
+    all_corr=[]
+    all_err=[]
+    all_psi=[]
+
+    for this_file in file_paths:
+        Corrs,err,_,cos_psi,_ =load_data(this_file)
+        psi = np.arccos(cos_psi)/np.pi*180
+        
+        all_corr.append(Corrs[0])
+        all_err.append(err[0])
+        all_psi.append(psi)
+        
+    return np.array(all_corr),np.array(all_err),np.array(all_psi)
+
+def corr_for_angle(dataset, angleset,angle_of_interest):
+    """returns the data and the angle of interest and its err
+    """
+    data = []
+    actual_angle = []
+    for ii in range(len(dataset)):
+        ind1 = np.where(angleset[ii]>angle_of_interest)[0][0]
+        ind2 = np.where(angleset[ii]>angle_of_interest)[0][1]
+        actual_angle.append((angleset[ii][ind1]+angleset[ii][ind2])/2.)
+        data.append((dataset[ii][ind2]+dataset[ii][ind1])/2.)  
+    
+    return data, np.mean(actual_angle),np.std(actual_angle)
+        
+        
 def load_q1_q2(path):
     """returns the q1 and the list of q2s used for computed correlator
     
