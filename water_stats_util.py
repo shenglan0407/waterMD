@@ -91,12 +91,26 @@ def load_dataset(file_paths):
         Corrs,err,_,cos_psi,_ =load_data(this_file)
         psi = np.arccos(cos_psi)/np.pi*180
         
-        all_corr.append(Corrs)
-        all_err.append(err)
+        all_corr.append(Corrs[0])
+        all_err.append(err[0])
         all_psi.append(psi)
         
     return np.array(all_corr),np.array(all_err),np.array(all_psi)
+
+def corr_for_angle(dataset, angleset,angle_of_interest):
+    """returns the data and the angle of interest and its err
+    """
+    data = []
+    actual_angle = []
+    for ii in range(len(dataset)):
+        ind1 = np.where(angleset[ii]>angle_of_interest)[0][0]
+        ind2 = np.where(angleset[ii]>angle_of_interest)[0][1]
+        actual_angle.append((angleset[ii][ind1]+angleset[ii][ind2])/2.)
+        data.append((dataset[ii][ind2]+dataset[ii][ind1])/2.)  
     
+    return data, np.mean(actual_angle),np.std(actual_angle)
+        
+        
 def load_q1_q2(path):
     """returns the q1 and the list of q2s used for computed correlator
     
