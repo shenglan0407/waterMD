@@ -132,22 +132,23 @@ class WaterStats:
             tthds.append([r_ij,r_kl])
         return tthds 
 
-    def oxygen_form_factor(self,q1,q2):
+    def oxygen_form_factor(self,q1,q2,crosscorr=False):
         # for oxygen only
         aa = [3.0485,2.2868,1.5463,0.867]
         bb = [13.2771,5.7011,0.3239,32.9089]
         cc = 0.2580
 
-        if q1==q2:
-            form_factor = cc
-            for this_a,this_b in zip(aa,bb):
-                form_factor += this_a * np.exp(-this_b*(q1/(4*np.pi))**2.0)
-
-        else:
+        if crosscorr:
             form_factor = [cc,cc]
             for this_a,this_b in zip(aa,bb):
                 form_factor[0] += this_a * np.exp(-this_b*(q1/(4*np.pi))**2.0)
                 form_factor[1] += this_a * np.exp(-this_b*(q2/(4*np.pi))**2.0)
+
+        else:
+
+            form_factor = cc
+            for this_a,this_b in zip(aa,bb):
+                form_factor += this_a * np.exp(-this_b*(q1/(4*np.pi))**2.0)
         return form_factor
             
     def four_point_struct_factor(self,qs,form_factor,cut_off,set):
@@ -295,7 +296,9 @@ class WaterStats:
             # make pairs of q1 and q2
             qs = np.array([[q1,this_q2] for this_q2 in q2])
             # Now compute all the form factors since they only depend on qs
-            ff = [self.oxygen_form_factor(np.linalg.norm(this_q[0]),np.linalg.norm(this_q[1])) for this_q in qs]
+            ff = [self.oxygen_form_factor(np.linalg.norm(this_q[0]),
+            np.linalg.norm(this_q[1]),crosscorr=True)\
+             for this_q in qs]
        
         if output == None:
             output_path = os.getcwd()+'/computed_results/corr_'+self.run_name+'.csv'
